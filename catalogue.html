@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الكتالوج الكامل | أثاث الثقة باتنة 05</title>
+<meta name="description" content="تصفح كل تشكيلة أثاث الثقة باتنة: صالونات، غرف نوم، مطابخ، طاولات، مكاتب وديكور.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="catalogue">
+
+<div id="site-header"></div>
+
+<div class="page-hero">
+  <div class="container">
+    <h1>الكتالوج الكامل</h1>
+    <div class="breadcrumb"><a href="index.html">الرئيسية</a> ← الكتالوج</div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="cat-scroll" id="catScroll"></div>
+
+    <div class="filters-bar">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="searchInput" placeholder="ابحث عن منتج...">
+      </div>
+      <div class="result-count" id="resultCount"></div>
+    </div>
+
+    <div class="product-grid" id="catalogueGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">لا توجد منتجات مطابقة لبحثك، جرّب كلمة أخرى.</div>
+  </div>
+</section>
+
+<div id="site-footer"></div>
+
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  let activeCat = params.get("cat") || "الكل";
+  let query = "";
+
+  const catScroll = document.getElementById("catScroll");
+  const grid = document.getElementById("catalogueGrid");
+  const resultCount = document.getElementById("resultCount");
+  const emptyState = document.getElementById("emptyState");
+
+  function renderChips() {
+    catScroll.innerHTML = CATEGORIES.map(c => `
+      <button class="cat-chip ${c === activeCat ? 'active' : ''}" data-cat="${c}">${c}</button>
+    `).join("");
+    catScroll.querySelectorAll(".cat-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeCat = btn.dataset.cat;
+        renderChips();
+        renderGrid();
+      });
+    });
+  }
+
+  function renderProductCard(p) {
+    return `
+      <a href="produit.html?id=${p.id}" class="product-card">
+        <div class="thumb-wrap" data-images='${JSON.stringify(p.images)}'>
+          ${p.badge ? `<span class="badge">${p.badge}</span>` : ""}
+          ${p.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}" alt="${p.name}">`).join("")}
+          <div class="thumb-shine"></div>
+          <div class="dot-row">${p.images.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join("")}</div>
+        </div>
+        <div class="p-info">
+          <div class="p-cat">${p.category}</div>
+          <div class="p-name">${p.name}</div>
+          <div class="p-price-row">
+            <div>
+              <span class="p-price">${formatPrice(p.price)}</span>
+              ${p.oldPrice ? `<span class="p-price-old">${formatPrice(p.oldPrice)}</span>` : ""}
+            </div>
+            <div class="p-view">←</div>
+          </div>
+        </div>
+      </a>
+    `;
+  }
+
+  function renderGrid() {
+    let list = PRODUCTS.filter(p => activeCat === "الكل" || p.category === activeCat);
+    if (query.trim()) {
+      list = list.filter(p => p.name.includes(query) || p.category.includes(query));
+    }
+    resultCount.textContent = `${list.length} منتج`;
+    grid.innerHTML = list.map(renderProductCard).join("");
+    emptyState.style.display = list.length === 0 ? "block" : "none";
+
+    // re-init tilt + rotate gallery for newly rendered cards
+    document.querySelectorAll(".thumb-wrap").forEach(el => {
+      const images = JSON.parse(el.dataset.images || "[]");
+      const dots = el.querySelector(".dot-row");
+      if (images.length > 1) initRotateGallery(el, images, dots);
+    });
+    initTiltCards();
+  }
+
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    query = e.target.value;
+    renderGrid();
+  });
+
+  renderChips();
+  renderGrid();
+</script>
+</body>
+</html>
