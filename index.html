@@ -164,7 +164,7 @@
   async function loadData() {
     let currentProducts = [];
     try {
-      const { data: posts, error } = await supabase
+      const { data: posts, error } = await supabaseClient
         .from("facebook_posts")
         .select("*")
         .order("published_at", { ascending: false });

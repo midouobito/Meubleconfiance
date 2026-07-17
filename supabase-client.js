@@ -11,8 +11,7 @@
 const SUPABASE_URL = "https://oaqiawqxxxaqzcalmxsh.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hcWlhd3F4eHhhcXpjYWxteHNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyODQ2MzEsImV4cCI6MjA5OTg2MDYzMX0.SwCu3-7ITl3b1qHPCvE1DMk6NkY3B4vMSSGa4fGug1U";
 
-// Initialize Supabase Client
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
  * Maps a facebook_posts table row into a structured product object 

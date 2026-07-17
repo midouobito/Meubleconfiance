@@ -57,7 +57,7 @@
 
     if (isUuid) {
       try {
-        const { data: post, error } = await supabase
+        const { data: post, error } = await supabaseClient
           .from("facebook_posts")
           .select("*")
           .eq("id", rawId)
