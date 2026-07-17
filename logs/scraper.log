@@ -178,3 +178,5 @@
 2026-07-17T23:57:35 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
 2026-07-17T23:57:35 [INFO] db.supabase_client – Batch upsert complete: 9 succeeded, 0 failed out of 9 total.
 2026-07-17T23:57:35 [INFO] __main__ – Pipeline END  2026-07-17T22:57:35.535060+00:00
+2026-07-18T00:17:16 [INFO] httpx – HTTP Request: GET https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/products?select=id&limit=1 "HTTP/2 200 OK"
+2026-07-18T00:17:17 [INFO] httpx – HTTP Request: GET https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/bucket "HTTP/2 200 OK"

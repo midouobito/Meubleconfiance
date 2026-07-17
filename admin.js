@@ -240,11 +240,18 @@ productForm.addEventListener('submit', async (e) => {
 
   if (id) {
     // Update
-    await supabaseClient.from('products').update(productData).eq('id', id);
+    const { error } = await supabaseClient.from('products').update(productData).eq('id', id);
+    if (error) {
+      alert("خطأ في التعديل: " + error.message);
+      console.error(error);
+    }
   } else {
     // Insert
-    // Prevent overriding fb_post_id manually to keep it null
-    await supabaseClient.from('products').insert([productData]);
+    const { error } = await supabaseClient.from('products').insert([productData]);
+    if (error) {
+      alert("خطأ في الإضافة: " + error.message);
+      console.error(error);
+    }
   }
 
   productModal.style.display = 'none';
@@ -255,6 +262,11 @@ productForm.addEventListener('submit', async (e) => {
 
 window.editProduct = async function(id) {
   const { data: product, error } = await supabaseClient.from('products').select('*').eq('id', id).single();
+  if (error) {
+    alert("خطأ في جلب بيانات المنتج: " + error.message);
+    console.error(error);
+    return;
+  }
   if (product) {
     document.getElementById('prodId').value = product.id;
     document.getElementById('prodName').value = product.name;
