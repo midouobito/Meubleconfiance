@@ -40,6 +40,37 @@
 
 <div id="site-footer"></div>
 
+<!-- Modal COD -->
+<div id="codModal" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); overflow:auto;">
+  <div class="modal-content" style="background-color:#fff; margin:10% auto; padding:20px; border-radius:10px; width:90%; max-width:500px; position:relative;">
+    <span class="close-modal" style="position:absolute; top:10px; left:15px; font-size:28px; font-weight:bold; cursor:pointer; color:#999;">&times;</span>
+    <h2 style="margin-top:0; font-family:'Cairo', sans-serif;">إتمام الطلب (الدفع عند الاستلام)</h2>
+    <p style="margin-bottom:20px; font-size:14px; color:#666;">الرجاء إدخال معلوماتك وسنقوم بالاتصال بك لتأكيد الطلب.</p>
+    <form id="codForm">
+      <div class="form-group" style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">الاسم الكامل</label>
+        <input type="text" id="codName" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-family:inherit;">
+      </div>
+      <div class="form-group" style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">رقم الهاتف</label>
+        <input type="tel" id="codPhone" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-family:inherit;" dir="ltr" placeholder="06XXXXXXXX">
+      </div>
+      <div class="form-group" style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">الولاية</label>
+        <input type="text" id="codWilaya" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-family:inherit;">
+      </div>
+      <div class="form-group" style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">العنوان الكامل</label>
+        <input type="text" id="codAddress" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-family:inherit;">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">تأكيد الطلب</button>
+    </form>
+    <div id="codSuccess" style="display:none; color:green; text-align:center; padding:20px 0; font-weight:bold;">
+      تم تسجيل طلبك بنجاح! سنتصل بك قريباً لتأكيد التوصيل.
+    </div>
+  </div>
+</div>
+
 <!-- Supabase CDN and Client initialization -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
@@ -58,14 +89,14 @@
     if (isUuid) {
       try {
         const { data: post, error } = await supabaseClient
-          .from("facebook_posts")
+          .from("products")
           .select("*")
           .eq("id", rawId)
           .single();
 
         if (error) throw error;
         if (post) {
-          product = mapPostToProduct(post);
+          product = mapRowToProduct(post);
         }
       } catch (err) {
         console.error("Failed to load product from Supabase, loading fallback mock product:", err);
@@ -124,9 +155,12 @@
             <tr><td>الدفع</td><td>الدفع عند الاستلام متاح</td></tr>
           </table>
 
-          <div class="pd-actions">
-            <a href="https://wa.me/213671946690?text=${encodeURIComponent('مرحباً، أنا مهتم بمنتج: ' + product.name + '\n' + (product.originalUrl || window.location.href))}" target="_blank" rel="noopener" class="btn btn-primary">اطلب عبر واتساب</a>
-            <a href="tel:0671946690" class="btn btn-outline">اتصل الآن</a>
+          <div class="pd-actions" style="display:flex; flex-direction:column; gap:10px;">
+            <button id="btnCod" class="btn btn-primary" style="width:100%;">اطلب الآن (الدفع عند الاستلام)</button>
+            <div style="display:flex; gap:10px; width:100%;">
+              <a href="https://wa.me/213671946690?text=${encodeURIComponent('مرحباً، أنا مهتم بمنتج: ' + product.name + '\n' + (product.originalUrl || window.location.href))}" target="_blank" rel="noopener" class="btn btn-primary" style="background:#25D366; border-color:#25D366; flex:1;">اطلب عبر واتساب</a>
+              <a href="tel:0671946690" class="btn btn-outline" style="flex:1;">اتصل الآن</a>
+            </div>
           </div>
           <div class="pd-note">💬 الأسعار والمقاسات قابلة للتعديل حسب الطلب. تواصل معنا لتأكيد التوفر في منطقتك.</div>
         </div>
@@ -173,6 +207,64 @@
     }
     initTiltCards();
     addRotateIndicators();
+
+    // Modal Logic
+    const btnCod = document.getElementById("btnCod");
+    const codModal = document.getElementById("codModal");
+    const closeModal = document.querySelector(".close-modal");
+    const codForm = document.getElementById("codForm");
+    const codSuccess = document.getElementById("codSuccess");
+
+    if (btnCod) {
+      btnCod.addEventListener("click", () => {
+        codModal.style.display = "block";
+        codForm.style.display = "block";
+        codSuccess.style.display = "none";
+        codForm.reset();
+      });
+    }
+
+    closeModal.addEventListener("click", () => {
+      codModal.style.display = "none";
+    });
+
+    window.addEventListener("click", (e) => {
+      if (e.target === codModal) {
+        codModal.style.display = "none";
+      }
+    });
+
+    codForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btnSubmit = codForm.querySelector('button[type="submit"]');
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "جاري التأكيد...";
+
+      const orderData = {
+        product_id: product.id,
+        product_name: product.name,
+        price: product.price,
+        customer_name: document.getElementById("codName").value,
+        customer_phone: document.getElementById("codPhone").value,
+        customer_wilaya: document.getElementById("codWilaya").value,
+        customer_address: document.getElementById("codAddress").value,
+        status: 'pending'
+      };
+
+      try {
+        const { error } = await supabaseClient.from('orders').insert([orderData]);
+        if (error) throw error;
+
+        codForm.style.display = "none";
+        codSuccess.style.display = "block";
+      } catch (err) {
+        console.error("Order error:", err);
+        alert("حدث خطأ أثناء تسجيل الطلب، يرجى المحاولة عبر الهاتف أو واتساب.");
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "تأكيد الطلب";
+      }
+    });
   }
 
   function renderRelatedProducts(product) {

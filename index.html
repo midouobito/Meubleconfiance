@@ -165,13 +165,14 @@
     let currentProducts = [];
     try {
       const { data: posts, error } = await supabaseClient
-        .from("facebook_posts")
+        .from("products")
         .select("*")
-        .order("published_at", { ascending: false });
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       if (posts && posts.length > 0) {
-        currentProducts = posts.map(mapPostToProduct);
+        currentProducts = posts.map(mapRowToProduct);
       } else {
         currentProducts = PRODUCTS;
       }

@@ -21,9 +21,11 @@ from tenacity import (
 
 import config
 
+import re
+
 logger = logging.getLogger(__name__)
 
-TABLE = "facebook_posts"
+TABLE = "products"
 
 # ── Singleton client ──────────────────────────────────────────────────────────
 _client: Client | None = None
@@ -37,17 +39,49 @@ def get_client() -> Client:
         _client = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY)
     return _client
 
+def _map_to_product(post: dict[str, Any]) -> dict[str, Any]:
+    text = post.get("post_text") or ""
+    
+    # Extract price
+    price = 0
+    clean_text = text.replace(' ', '')
+    price_match = re.search(r'([0-9]+)000(?:دج|DA|da)', clean_text, re.IGNORECASE)
+    if price_match:
+        try:
+            price = int(price_match.group(1)) * 1000
+        except ValueError:
+            pass
 
-# ── Fields to UPDATE when a post_id already exists ───────────────────────────
-_UPSERT_UPDATE_FIELDS = [
-    "likes_count",
-    "shares_count",
-    "comments_count",
-    "media_urls",
-    "stored_media",
-    "post_text",
-    "scraped_at",
-]
+    # Basic category extraction
+    lower_text = text.lower()
+    cat = "ديكور وإكسسوارات"
+    if 'صالون' in lower_text or 'salon' in lower_text: cat = 'صالونات'
+    elif 'غرفة نوم' in lower_text or 'chambre' in lower_text: cat = 'غرف نوم'
+    elif 'طاولة' in lower_text or 'table' in lower_text: cat = 'طاولات وكراسي'
+    elif 'مطبخ' in lower_text or 'cuisine' in lower_text: cat = 'مطابخ'
+    elif 'مكتب' in lower_text or 'bureau' in lower_text: cat = 'مكاتب'
+
+    name = text.split('\n')[0].strip() if text else 'Produit Facebook'
+    if not name:
+        name = 'Produit Facebook'
+
+    images = post.get("stored_media", [])
+    if not images:
+        images = post.get("media_urls", [])
+
+    likes = post.get("likes_count", 0)
+    badge = f"{likes} 👍" if likes > 0 else None
+
+    return {
+        "fb_post_id": post.get("post_id"),
+        "name": name,
+        "description": text,
+        "price": price,
+        "category": cat,
+        "images": images,
+        "badge": badge,
+        "original_url": post.get("post_url"),
+    }
 
 
 @retry(
@@ -58,32 +92,23 @@ _UPSERT_UPDATE_FIELDS = [
 )
 def upsert_post(post: dict[str, Any]) -> dict[str, Any] | None:
     """
-    UPSERT a single post record.
-
-    On conflict with `post_id`, update the mutable fields (engagement counts,
-    media URLs, text) but preserve the original `published_at` and `id`.
-
-    Args:
-        post: Dict matching the `facebook_posts` schema.
-
-    Returns:
-        The upserted row, or None if the operation failed.
+    UPSERT a single post record into the products table.
     """
     client = get_client()
+    product_data = _map_to_product(post)
+    
     try:
         result = (
             client.table(TABLE)
             .upsert(
-                post,
-                on_conflict="post_id",
-                # Supabase upsert merges the provided columns only
-                # `returning="representation"` gives us back the full row
+                product_data,
+                on_conflict="fb_post_id",
                 returning="representation",
             )
             .execute()
         )
         if result.data:
-            logger.debug("Upserted post_id=%s", post.get("post_id"))
+            logger.debug("Upserted product for post_id=%s", post.get("post_id"))
             return result.data[0]
         logger.warning("Upsert returned no data for post_id=%s", post.get("post_id"))
         return None
@@ -96,12 +121,6 @@ def upsert_post(post: dict[str, Any]) -> dict[str, Any] | None:
 def upsert_posts(posts: list[dict[str, Any]]) -> tuple[int, int]:
     """
     Batch UPSERT a list of posts with per-record error isolation.
-
-    Args:
-        posts: List of post dicts.
-
-    Returns:
-        (success_count, failure_count) tuple.
     """
     success = 0
     failure = 0
@@ -129,27 +148,18 @@ def upsert_posts(posts: list[dict[str, Any]]) -> tuple[int, int]:
 
 def fetch_existing_post_ids(page_name: str) -> set[str]:
     """
-    Fetch all post_ids already stored for a given page.
-    Useful for incremental scraping (skip already-stored posts).
-
-    Args:
-        page_name: The Facebook page slug.
-
-    Returns:
-        Set of post_id strings already in the DB.
+    Fetch all fb_post_ids already stored.
     """
     client = get_client()
     try:
         result = (
             client.table(TABLE)
-            .select("post_id")
-            .eq("page_name", page_name)
+            .select("fb_post_id")
+            .not_.is_("fb_post_id", "null")
             .execute()
         )
-        ids = {row["post_id"] for row in (result.data or [])}
-        logger.info(
-            "Fetched %d existing post IDs for page '%s'.", len(ids), page_name
-        )
+        ids = {row["fb_post_id"] for row in (result.data or []) if row.get("fb_post_id")}
+        logger.info("Fetched %d existing post IDs.", len(ids))
         return ids
     except Exception as exc:
         logger.error("Failed to fetch existing post IDs: %s", exc)

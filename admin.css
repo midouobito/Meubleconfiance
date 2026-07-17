@@ -1,0 +1,127 @@
+/* admin.css */
+body { margin: 0; padding: 0; }
+.admin-login-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f4f6f8;
+}
+.admin-login-box {
+  background: #fff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+.admin-dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+.admin-sidebar {
+  width: 250px;
+  background: #1a1c23;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-brand {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  text-align: center;
+}
+.sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+.sidebar-nav li {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.sidebar-nav .nav-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #ccc;
+  text-align: right;
+  padding: 15px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sidebar-nav .nav-btn:hover, .sidebar-nav .nav-btn.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.sidebar-footer {
+  padding: 20px;
+}
+.admin-main {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  background-color: #f4f6f8;
+}
+.tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.bg-white {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.admin-table th, .admin-table td {
+  padding: 12px 15px;
+  text-align: right;
+  border-bottom: 1px solid #eee;
+}
+.admin-table th {
+  background: #fafafa;
+  font-weight: 600;
+  color: #555;
+}
+.admin-table tbody tr:hover {
+  background: #fdfdfd;
+}
+.thumb-td img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.status-active { background: #e6f4ea; color: #137333; }
+.status-inactive { background: #fce8e6; color: #c5221f; }
+.status-pending { background: #fef7e0; color: #b06000; }
+.status-confirmed { background: #e8f0fe; color: #1a73e8; }
+.status-shipped { background: #e6f4ea; color: #137333; }
+.status-delivered { background: #ceead6; color: #0d652d; }
+.status-cancelled { background: #fad2cf; color: #a50e0e; }
+
+.action-btn {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 5px;
+}
+.action-btn:hover { background: #eee; }
+.action-delete { color: red; border-color: #ffcccc; }
+.action-delete:hover { background: #fff0f0; }

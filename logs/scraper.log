@@ -46,3 +46,135 @@
 2026-07-17T22:38:49 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 200 OK"
 2026-07-17T22:38:49 [INFO] db.supabase_client – Batch upsert complete: 5 succeeded, 0 failed out of 5 total.
 2026-07-17T22:38:51 [INFO] __main__ – Pipeline END  2026-07-17T21:38:51.038090+00:00
+2026-07-17T23:51:00 [INFO] __main__ – Validating Supabase connection…
+2026-07-17T23:51:00 [INFO] db.supabase_client – Initialising Supabase client → https://oaqiawqxxxaqzcalmxsh.supabase.co
+2026-07-17T23:51:03 [INFO] httpx – HTTP Request: GET https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?select=id&limit=0 "HTTP/2 200 OK"
+2026-07-17T23:51:03 [INFO] __main__ – Supabase connection OK.
+2026-07-17T23:51:03 [INFO] __main__ – ============================================================
+2026-07-17T23:51:03 [INFO] __main__ – Pipeline START  2026-07-17T22:51:03.644937+00:00
+2026-07-17T23:51:03 [INFO] __main__ – Target page  : https://www.facebook.com/Meuble.Confiance.Batna.05
+2026-07-17T23:51:03 [INFO] __main__ – Max posts    : unlimited
+2026-07-17T23:51:03 [INFO] __main__ – Archive media: True
+2026-07-17T23:51:03 [INFO] __main__ – Incremental  : True
+2026-07-17T23:51:03 [INFO] __main__ – ============================================================
+2026-07-17T23:51:03 [INFO] httpx – HTTP Request: GET https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?select=post_id&page_name=eq.Meuble.Confiance.Batna.05 "HTTP/2 200 OK"
+2026-07-17T23:51:03 [INFO] db.supabase_client – Fetched 34 existing post IDs for page 'Meuble.Confiance.Batna.05'.
+2026-07-17T23:51:03 [INFO] __main__ – Incremental mode: 34 posts already in DB.
+2026-07-17T23:51:04 [INFO] scraper.browser – Launching Chromium – viewport=1920x1080  locale=de-DE  tz=Europe/London  session=loaded
+2026-07-17T23:51:06 [INFO] __main__ – Navigating to https://www.facebook.com/Meuble.Confiance.Batna.05 ...
+2026-07-17T23:51:16 [INFO] scraper.page_parser – Extracting posts from desktop feed for 'Meuble.Confiance.Batna.05' (max=0)
+2026-07-17T23:51:16 [INFO] scraper.page_parser – Scroll round 1: Found 4 post elements on page.
+2026-07-17T23:51:17 [INFO] scraper.page_parser – [1] Loaded post: ID=2097168361225117  Type=reel    Likes=5     Comments=59    Shares=30  
+2026-07-17T23:51:22 [INFO] scraper.page_parser – Scroll round 2: Found 10 post elements on page.
+2026-07-17T23:51:23 [INFO] scraper.page_parser – [2] Loaded post: ID=2008958026394021  Type=reel    Likes=5     Comments=54    Shares=56  
+2026-07-17T23:51:23 [INFO] scraper.page_parser – [3] Loaded post: ID=2510674506103877  Type=reel    Likes=5     Comments=146   Shares=56  
+2026-07-17T23:51:23 [INFO] scraper.page_parser – [4] Loaded post: ID=1296856035598753  Type=reel    Likes=5     Comments=157   Shares=53  
+2026-07-17T23:51:28 [INFO] scraper.page_parser – Scroll round 3: Found 19 post elements on page.
+2026-07-17T23:51:30 [INFO] scraper.page_parser – [5] Loaded post: ID=1352210179638279  Type=reel    Likes=5     Comments=147   Shares=42  
+2026-07-17T23:51:30 [INFO] scraper.page_parser – [6] Loaded post: ID=1506116734169823  Type=reel    Likes=5     Comments=164   Shares=28  
+2026-07-17T23:51:31 [INFO] scraper.page_parser – [7] Loaded post: ID=1010635428466562  Type=reel    Likes=5     Comments=153   Shares=81  
+2026-07-17T23:51:35 [INFO] scraper.page_parser – Scroll round 4: Found 19 post elements on page.
+2026-07-17T23:51:43 [INFO] scraper.page_parser – Scroll round 5: Found 23 post elements on page.
+2026-07-17T23:51:45 [INFO] scraper.page_parser – [8] Loaded post: ID=4412543609062813  Type=reel    Likes=5     Comments=168   Shares=107 
+2026-07-17T23:51:46 [INFO] scraper.page_parser – [9] Loaded post: ID=1634839157614633  Type=reel    Likes=5     Comments=202   Shares=52  
+2026-07-17T23:51:50 [INFO] scraper.page_parser – Scroll round 6: Found 25 post elements on page.
+2026-07-17T23:51:53 [INFO] scraper.page_parser – [10] Loaded post: ID=1035225828880631  Type=reel    Likes=5     Comments=154   Shares=63  
+2026-07-17T23:51:57 [INFO] scraper.page_parser – Scroll round 7: Found 31 post elements on page.
+2026-07-17T23:52:01 [INFO] scraper.page_parser – [11] Loaded post: ID=1513574526652743  Type=reel    Likes=5     Comments=142   Shares=148 
+2026-07-17T23:52:01 [INFO] scraper.page_parser – [12] Loaded post: ID=1537431324528812  Type=reel    Likes=5     Comments=174   Shares=83  
+2026-07-17T23:52:02 [INFO] scraper.page_parser – [13] Loaded post: ID=1579636683684061  Type=reel    Likes=5     Comments=173   Shares=81  
+2026-07-17T23:52:06 [INFO] scraper.page_parser – Scroll round 8: Found 31 post elements on page.
+2026-07-17T23:52:15 [INFO] scraper.page_parser – Scroll round 9: Found 35 post elements on page.
+2026-07-17T23:52:19 [INFO] scraper.page_parser – [14] Loaded post: ID=1328307586084064  Type=reel    Likes=5     Comments=136   Shares=41  
+2026-07-17T23:52:19 [INFO] scraper.page_parser – [15] Loaded post: ID=4442145182727264  Type=reel    Likes=5     Comments=258   Shares=70  
+2026-07-17T23:52:23 [INFO] scraper.page_parser – Scroll round 10: Found 38 post elements on page.
+2026-07-17T23:52:28 [INFO] scraper.page_parser – [16] Loaded post: ID=968164199564936  Type=reel    Likes=5     Comments=151   Shares=57  
+2026-07-17T23:52:32 [INFO] scraper.page_parser – Scroll round 11: Found 44 post elements on page.
+2026-07-17T23:52:38 [INFO] scraper.page_parser – [17] Loaded post: ID=1461284252686888  Type=reel    Likes=5     Comments=182   Shares=53  
+2026-07-17T23:52:38 [INFO] scraper.page_parser – [18] Loaded post: ID=1317954097172544  Type=reel    Likes=5     Comments=166   Shares=37  
+2026-07-17T23:52:38 [INFO] scraper.page_parser – [19] Loaded post: ID=861791150059218  Type=reel    Likes=5     Comments=162   Shares=33  
+2026-07-17T23:52:43 [INFO] scraper.page_parser – Scroll round 12: Found 44 post elements on page.
+2026-07-17T23:52:53 [INFO] scraper.page_parser – Scroll round 13: Found 50 post elements on page.
+2026-07-17T23:53:01 [INFO] scraper.page_parser – [20] Loaded post: ID=990621080647903  Type=reel    Likes=5     Comments=149   Shares=42  
+2026-07-17T23:53:01 [INFO] scraper.page_parser – [21] Loaded post: ID=1778374633522811  Type=reel    Likes=5     Comments=197   Shares=165 
+2026-07-17T23:53:02 [INFO] scraper.page_parser – [22] Loaded post: ID=26521606444182355  Type=reel    Likes=5     Comments=153   Shares=33  
+2026-07-17T23:53:06 [INFO] scraper.page_parser – Scroll round 14: Found 50 post elements on page.
+2026-07-17T23:53:19 [INFO] scraper.page_parser – Scroll round 15: Found 52 post elements on page.
+2026-07-17T23:53:27 [INFO] scraper.page_parser – [23] Loaded post: ID=1550688113418126  Type=reel    Likes=5     Comments=157   Shares=51  
+2026-07-17T23:53:31 [INFO] scraper.page_parser – Scroll round 16: Found 56 post elements on page.
+2026-07-17T23:53:41 [INFO] scraper.page_parser – [24] Loaded post: ID=975625348847175  Type=reel    Likes=5     Comments=159   Shares=52  
+2026-07-17T23:53:41 [INFO] scraper.page_parser – [25] Loaded post: ID=1042150451555745  Type=reel    Likes=5     Comments=153   Shares=59  
+2026-07-17T23:53:46 [INFO] scraper.page_parser – Scroll round 17: Found 59 post elements on page.
+2026-07-17T23:53:54 [INFO] scraper.page_parser – [26] Loaded post: ID=1850653695911115  Type=reel    Likes=5     Comments=225   Shares=138 
+2026-07-17T23:53:55 [INFO] scraper.page_parser – [27] Loaded post: ID=856829797260582  Type=reel    Likes=5     Comments=153   Shares=70  
+2026-07-17T23:53:59 [INFO] scraper.page_parser – Scroll round 18: Found 59 post elements on page.
+2026-07-17T23:54:11 [INFO] scraper.page_parser – Scroll round 19: Found 67 post elements on page.
+2026-07-17T23:54:20 [INFO] scraper.page_parser – [28] Loaded post: ID=1408591597830939  Type=reel    Likes=5     Comments=109   Shares=39  
+2026-07-17T23:54:21 [INFO] scraper.page_parser – [29] Loaded post: ID=1742510723762734  Type=reel    Likes=5     Comments=225   Shares=81  
+2026-07-17T23:54:21 [INFO] scraper.page_parser – [30] Loaded post: ID=1576737767429991  Type=reel    Likes=5     Comments=161   Shares=294 
+2026-07-17T23:54:21 [INFO] scraper.page_parser – [31] Loaded post: ID=1558332729278042  Type=video   Likes=5     Comments=552   Shares=386 
+2026-07-17T23:54:26 [INFO] scraper.page_parser – Scroll round 20: Found 67 post elements on page.
+2026-07-17T23:54:39 [INFO] scraper.page_parser – Scroll round 21: Found 75 post elements on page.
+2026-07-17T23:54:50 [INFO] scraper.page_parser – [32] Loaded post: ID=38166732769592225  Type=reel    Likes=5     Comments=171   Shares=64  
+2026-07-17T23:54:50 [INFO] scraper.page_parser – [33] Loaded post: ID=1067045492561319  Type=reel    Likes=5     Comments=176   Shares=68  
+2026-07-17T23:54:51 [INFO] scraper.page_parser – [34] Loaded post: ID=1045996194794125  Type=reel    Likes=5     Comments=189   Shares=58  
+2026-07-17T23:54:55 [INFO] scraper.page_parser – Scroll round 22: Found 75 post elements on page.
+2026-07-17T23:55:10 [INFO] scraper.page_parser – Scroll round 23: Found 75 post elements on page.
+2026-07-17T23:55:25 [INFO] scraper.page_parser – Scroll round 24: Found 83 post elements on page.
+2026-07-17T23:55:36 [INFO] scraper.page_parser – [35] Loaded post: ID=1348089160624340  Type=reel    Likes=5     Comments=314   Shares=108 
+2026-07-17T23:55:36 [INFO] scraper.page_parser – [36] Loaded post: ID=1805287213791472  Type=reel    Likes=5     Comments=204   Shares=58  
+2026-07-17T23:55:37 [INFO] scraper.page_parser – [37] Loaded post: ID=2128979544491896  Type=reel    Likes=5     Comments=277   Shares=127 
+2026-07-17T23:55:41 [INFO] scraper.page_parser – Scroll round 25: Found 83 post elements on page.
+2026-07-17T23:55:57 [INFO] scraper.page_parser – Scroll round 26: Found 87 post elements on page.
+2026-07-17T23:56:08 [INFO] scraper.page_parser – [38] Loaded post: ID=4390395771274561  Type=reel    Likes=5     Comments=198   Shares=110 
+2026-07-17T23:56:09 [INFO] scraper.page_parser – [39] Loaded post: ID=27753331827632291  Type=reel    Likes=5     Comments=198   Shares=42  
+2026-07-17T23:56:13 [INFO] scraper.page_parser – Scroll round 27: Found 89 post elements on page.
+2026-07-17T23:56:25 [INFO] scraper.page_parser – [40] Loaded post: ID=3642270509265609  Type=reel    Likes=5     Comments=159   Shares=72  
+2026-07-17T23:56:30 [INFO] scraper.page_parser – Scroll round 28: Found 97 post elements on page.
+2026-07-17T23:56:44 [INFO] scraper.page_parser – [41] Loaded post: ID=2535005143605099  Type=reel    Likes=5     Comments=148   Shares=242 
+2026-07-17T23:56:44 [INFO] scraper.page_parser – [42] Loaded post: ID=1354974496604920  Type=reel    Likes=5     Comments=202   Shares=184 
+2026-07-17T23:56:44 [INFO] scraper.page_parser – [43] Loaded post: ID=27141070458928737  Type=reel    Likes=5     Comments=146   Shares=78  
+2026-07-17T23:56:49 [INFO] scraper.page_parser – Scroll round 29: Found 97 post elements on page.
+2026-07-17T23:57:06 [INFO] scraper.page_parser – Extraction complete: 43 posts collected.
+2026-07-17T23:57:06 [INFO] scraper.browser – Closing browser.
+2026-07-17T23:57:06 [INFO] __main__ – Incremental filter: 9 new posts (skipped 34 already stored).
+2026-07-17T23:57:06 [INFO] __main__ – Archiving media for 9 posts…
+2026-07-17T23:57:07 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-1.fna.fbcdn.net/v/t15.5256-10/746528293_1036558932183901_5305589584866199195_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1920&ctp=p960x960&_nc_cat=111&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=Ig6Rm9WLL3cQ7kNvwGrv-HE&_nc_oc=Adp1sGnz2qgLkSE8eMBZNoxas-bm-b0ywXzj-b_pHxViEBM_KSYJ9R6W3emcyn82u9Y&_nc_zt=23&_nc_ht=scontent.fblj1-1.fna&_nc_gid=u5tb14qz2dhRX1ZPvhWdbg&_nc_ss=7b2a8&oh=00_AQA9DpRmbdrgUU_y7ghsNUAQgCk5suCMqXXgqvh3yKecSQ&oe=6A607072 "HTTP/1.1 200 OK"
+2026-07-17T23:57:11 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/1348089160624340/603a3e23cc711b0b.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:11 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/1348089160624340/603a3e23cc711b0b.jpg
+2026-07-17T23:57:11 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-1.fna.fbcdn.net/v/t15.5256-10/749096354_1465862582254848_4384989585591703597_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1920&ctp=p960x960&_nc_cat=111&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=fP3MpgeyRb0Q7kNvwFWHTMO&_nc_oc=Adr58cJnWaD9Gn9oKHWKQ6J33wdVWmxM_S-ygsYX5ddR5WROzfjdeJUcHm7n1U_roeI&_nc_zt=23&_nc_ht=scontent.fblj1-1.fna&_nc_gid=u5tb14qz2dhRX1ZPvhWdbg&_nc_ss=7b2a8&oh=00_AQCmGJ8T4vQQv4zjRIamUaNLA2ekmOuVWUWL9CzQ9A5uBA&oe=6A6099C3 "HTTP/1.1 200 OK"
+2026-07-17T23:57:13 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/1805287213791472/29f476230fc23265.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:13 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/1805287213791472/29f476230fc23265.jpg
+2026-07-17T23:57:13 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-1.fna.fbcdn.net/v/t15.5256-10/746693545_1054836440390582_6598812061070019466_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1920&ctp=p960x960&_nc_cat=106&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=pk99NV64ZMEQ7kNvwEYT4_L&_nc_oc=Adqs6KRFLEa9hL4iyxVbC_deQOWmqQZZj5vodZ0sEwb0pjYIJbN4uselO9xjwKchSJE&_nc_zt=23&_nc_ht=scontent.fblj1-1.fna&_nc_gid=u5tb14qz2dhRX1ZPvhWdbg&_nc_ss=7b2a8&oh=00_AQDpaNwIHoZE2DH03w5iiOhuaVtqOTve4eXsCmAY6ynuyg&oe=6A607EED "HTTP/1.1 200 OK"
+2026-07-17T23:57:16 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/2128979544491896/96e34d9e7b27b702.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:16 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/2128979544491896/96e34d9e7b27b702.jpg
+2026-07-17T23:57:17 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-2.fna.fbcdn.net/v/t15.5256-10/747653037_1383711940586039_4923904296333272878_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1920&ctp=p960x960&_nc_cat=109&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=VjriJs0FnEoQ7kNvwGywrMg&_nc_oc=AdpGK0BZkN3pFvpkeXJPCYjMPYDVrEkV7HKSBFlRpn-h6U4jjQk9SZvlw1HNDNfNruI&_nc_zt=23&_nc_ht=scontent.fblj1-2.fna&_nc_gid=R8kVzcSTitRPt6KYqHfskw&_nc_ss=7b2a8&oh=00_AQDQZhGMmLBR9XQCpaWTIuT3S5uGumjvoLy-2LWM5qb7kQ&oe=6A60751B "HTTP/1.1 200 OK"
+2026-07-17T23:57:19 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/4390395771274561/15eb02cd7bdf5cab.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:19 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/4390395771274561/15eb02cd7bdf5cab.jpg
+2026-07-17T23:57:19 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-1.fna.fbcdn.net/v/t15.5256-10/743163764_1741108317237639_1898850713710511005_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1920&ctp=p960x960&_nc_cat=102&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=8FAnM82fX70Q7kNvwGtSLXg&_nc_oc=AdorR21-MbF5MS_PIpfNfDChdOBo3DmBbap5QhU1MDLGi1WjuVWUCEnnLBoF4AnZ49o&_nc_zt=23&_nc_ht=scontent.fblj1-1.fna&_nc_gid=R8kVzcSTitRPt6KYqHfskw&_nc_ss=7b2a8&oh=00_AQDfQWThLm5iL4B5KG1xqfzByxNn2tr2dOmWSzhB9P-6ew&oe=6A60986B "HTTP/1.1 200 OK"
+2026-07-17T23:57:22 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/27753331827632291/2363f6c6e85401d9.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:22 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/27753331827632291/2363f6c6e85401d9.jpg
+2026-07-17T23:57:24 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-1.fna.fbcdn.net/v/t15.5256-10/748053390_1027466213314327_417439447030990102_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1920&ctp=p960x960&_nc_cat=101&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=WGdALUaJwisQ7kNvwF9oxtc&_nc_oc=Adp1iDLo2ix2I31MMap_WpKhiRkaxg8DFGF4Ic9c52oHLUmOVXPIFyuBIpoyI51pMbQ&_nc_zt=23&_nc_ht=scontent.fblj1-1.fna&_nc_gid=R8kVzcSTitRPt6KYqHfskw&_nc_ss=7b2a8&oh=00_AQBPXz19_23JPJVBa8P4FXcL8GbHKdKqq1DYgYcbR7JH0Q&oe=6A609100 "HTTP/1.1 200 OK"
+2026-07-17T23:57:26 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/3642270509265609/0e9f6034c9b7ae6c.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:26 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/3642270509265609/0e9f6034c9b7ae6c.jpg
+2026-07-17T23:57:26 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-2.fna.fbcdn.net/v/t15.5256-10/747969768_1349538279918438_4404633587783731353_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1920&ctp=p960x960&_nc_cat=110&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=AtlDi-O1WfwQ7kNvwFMnZDG&_nc_oc=AdoWM13NWHLaJOf-n8vATVF6GCD7PtWZqGAIAOH3K5Yj5LOerIlMOCeHoMC_M5fzvqM&_nc_zt=23&_nc_ht=scontent.fblj1-2.fna&_nc_gid=bbUFR35maOFOTDPA_VOj8Q&_nc_ss=7b2a8&oh=00_AQDbvyYfo8rwiLnDLv_5oOQDQXaqr7Lc_bMvf9kec9UwNw&oe=6A609AA3 "HTTP/1.1 200 OK"
+2026-07-17T23:57:28 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/2535005143605099/10c1c0ab1c52cf65.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:28 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/2535005143605099/10c1c0ab1c52cf65.jpg
+2026-07-17T23:57:29 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-1.fna.fbcdn.net/v/t15.5256-10/747988343_2248305365970367_2076901790598268373_n.jpg?stp=dst-jpg_tt6&cstp=mx1080x1920&ctp=p960x960&_nc_cat=111&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=ZHvmjVdLsgIQ7kNvwEpZHXc&_nc_oc=AdoGy22SZ6KkNDiKkRn4g-ey5v2ZStMncymlqsCHyyBc9iF-HKm7_x8QVs-s4500LgQ&_nc_zt=23&_nc_ht=scontent.fblj1-1.fna&_nc_gid=bbUFR35maOFOTDPA_VOj8Q&_nc_ss=7b2a8&oh=00_AQCKXoO9JW2UF1sipSDfP1PhXQVJAwzVV9M5NcfIwAroTg&oe=6A607DF7 "HTTP/1.1 200 OK"
+2026-07-17T23:57:32 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/1354974496604920/5a626d77a0a279df.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:32 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/1354974496604920/5a626d77a0a279df.jpg
+2026-07-17T23:57:32 [INFO] httpx – HTTP Request: GET https://scontent.fblj1-1.fna.fbcdn.net/v/t15.5256-10/746853018_1608882130850069_6934432574053937490_n.jpg?stp=dst-jpg_tt6&cstp=mx720x1280&ctp=s720x1280&_nc_cat=100&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=FtVdhUTocvoQ7kNvwE_c0I7&_nc_oc=AdpfvsDWuC6ZcqRpr45_dgddStu-iHvNnRWOWzuH0bUatxThqfhhCCiRN-iZaTkIxMY&_nc_zt=23&_nc_ht=scontent.fblj1-1.fna&_nc_gid=bbUFR35maOFOTDPA_VOj8Q&_nc_ss=7b2a8&oh=00_AQB1wBgz9fjG0j8Im5D7lgbjBaWwTN3FGEHcD5Hv6jJXgQ&oe=6A609476 "HTTP/1.1 200 OK"
+2026-07-17T23:57:34 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/facebook-media/Meuble.Confiance.Batna.05/27141070458928737/6c30795fbd719ab2.jpg "HTTP/2 200 OK"
+2026-07-17T23:57:34 [INFO] scraper.media_handler – Archived media → https://oaqiawqxxxaqzcalmxsh.supabase.co/storage/v1/object/public/facebook-media/Meuble.Confiance.Batna.05/27141070458928737/6c30795fbd719ab2.jpg
+2026-07-17T23:57:34 [INFO] __main__ – Upserting 9 posts into Supabase…
+2026-07-17T23:57:34 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:34 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:34 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:34 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:35 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:35 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:35 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:35 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:35 [INFO] httpx – HTTP Request: POST https://oaqiawqxxxaqzcalmxsh.supabase.co/rest/v1/facebook_posts?on_conflict=post_id "HTTP/2 201 Created"
+2026-07-17T23:57:35 [INFO] db.supabase_client – Batch upsert complete: 9 succeeded, 0 failed out of 9 total.
+2026-07-17T23:57:35 [INFO] __main__ – Pipeline END  2026-07-17T22:57:35.535060+00:00
