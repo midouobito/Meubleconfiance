@@ -125,6 +125,8 @@
 
 <div id="site-footer"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 <script src="products.js"></script>
 <script>
   const catImages = {
@@ -133,22 +135,7 @@
     "مطابخ": "https://picsum.photos/seed/cat-cuisine/700/560",
   };
   const homeCatGrid = document.getElementById("homeCatGrid");
-  Object.entries(catImages).forEach(([cat, img]) => {
-    const count = PRODUCTS.filter(p => p.category === cat).length;
-    homeCatGrid.innerHTML += `
-      <a href="catalogue.html?cat=${encodeURIComponent(cat)}" class="cat-card">
-        <img src="${img}" alt="${cat}">
-        <div class="overlay">
-          <h3>${cat}</h3>
-          <span>${count}+ منتج</span>
-        </div>
-      </a>
-    `;
-  });
-
-  const featured = PRODUCTS.filter(p => p.badge).slice(0, 4);
   const featuredGrid = document.getElementById("featuredGrid");
-  featuredGrid.innerHTML = featured.map(renderProductCard).join("");
 
   function renderProductCard(p) {
     return `
@@ -164,7 +151,7 @@
           <div class="p-name">${p.name}</div>
           <div class="p-price-row">
             <div>
-              <span class="p-price">${formatPrice(p.price)}</span>
+              <span class="p-price">${p.price > 0 ? formatPrice(p.price) : "اتصل لمعرفة السعر"}</span>
               ${p.oldPrice ? `<span class="p-price-old">${formatPrice(p.oldPrice)}</span>` : ""}
             </div>
             <div class="p-view">←</div>
@@ -173,15 +160,59 @@
       </a>
     `;
   }
+
+  async function loadData() {
+    let currentProducts = [];
+    try {
+      const { data: posts, error } = await supabase
+        .from("facebook_posts")
+        .select("*")
+        .order("published_at", { ascending: false });
+
+      if (error) throw error;
+      if (posts && posts.length > 0) {
+        currentProducts = posts.map(mapPostToProduct);
+      } else {
+        currentProducts = PRODUCTS;
+      }
+    } catch (err) {
+      console.warn("Using offline PRODUCTS fallback due to connection error:", err);
+      currentProducts = PRODUCTS;
+    }
+
+    // Render Categories
+    Object.entries(catImages).forEach(([cat, img]) => {
+      const count = currentProducts.filter(p => p.category === cat).length;
+      homeCatGrid.innerHTML += `
+        <a href="catalogue.html?cat=${encodeURIComponent(cat)}" class="cat-card">
+          <img src="${img}" alt="${cat}">
+          <div class="overlay">
+            <h3>${cat}</h3>
+            <span>${count}+ منتج</span>
+          </div>
+        </a>
+      `;
+    });
+
+    // Render Featured (just pick first 4 for now, or ones with badges if they have them)
+    let featured = currentProducts.filter(p => p.badge).slice(0, 4);
+    if (featured.length === 0) {
+        featured = currentProducts.slice(0, 4);
+    }
+    featuredGrid.innerHTML = featured.map(renderProductCard).join("");
+
+    // Initialize gallery interaction
+    document.querySelectorAll(".thumb-wrap").forEach(el => {
+      const images = JSON.parse(el.dataset.images || "[]");
+      const dots = el.querySelector(".dot-row");
+      if (images.length > 1) initRotateGallery(el, images, dots);
+    });
+    addRotateIndicators();
+    if (typeof initTiltCards === "function") initTiltCards();
+  }
+
+  loadData();
 </script>
 <script src="main.js"></script>
-<script>
-  document.querySelectorAll(".thumb-wrap").forEach(el => {
-    const images = JSON.parse(el.dataset.images || "[]");
-    const dots = el.querySelector(".dot-row");
-    if (images.length > 1) initRotateGallery(el, images, dots);
-  });
-  addRotateIndicators();
-</script>
 </body>
 </html>
