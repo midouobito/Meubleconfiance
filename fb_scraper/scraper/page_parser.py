@@ -1,18 +1,16 @@
 """
-scraper/page_parser.py – DOM extraction logic for Facebook public pages.
+scraper/page_parser.py – DOM parser for Facebook Desktop Feed (www.facebook.com)
 
-Extracts posts from the page feed, parses:
-  - post_id, post_url, post_text
-  - published_at  (from <time> elements or heuristic patterns)
-  - media_type    (text / image / video / reel / link)
-  - media_urls    (image src or video src list)
-  - likes_count, shares_count, comments_count
+Parses posts directly from the desktop version of Facebook since authenticated
+sessions are redirected to the full desktop site.
 
-Facebook's DOM is heavily obfuscated and changes frequently. This module
-uses a layered approach:
-  1. Standard semantic selectors
-  2. Aria-role fallbacks
-  3. Regex patterns for post IDs embedded in URLs
+Extracts:
+  - post_id (from links or feed container IDs)
+  - post_text (from message containers)
+  - published_at
+  - media_type (text, image, video, reel, link)
+  - media_urls
+  - engagement counts (likes, comments, shares)
 """
 from __future__ import annotations
 
@@ -21,274 +19,242 @@ import logging
 import re
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, parse_qs
 
 from playwright.async_api import Page
 
 logger = logging.getLogger(__name__)
 
-# ── Regex helpers ─────────────────────────────────────────────────────────────
-_POST_ID_FROM_URL = re.compile(
-    r"(?:posts|videos|photos|reel|permalink)/(\d+)|pfbid([A-Za-z0-9]+)"
-)
-_STORY_ID_PATTERN = re.compile(r"story_fbid=(\d+)")
-_COUNT_PATTERN = re.compile(r"([\d,.]+[KkMm]?)")
-
+# Canonical domain base
 FB_BASE = "https://www.facebook.com"
+MBASIC_BASE = "https://mbasic.facebook.com" # kept for backwards compatibility in main imports
+
+# Regex helpers
+_STORY_ID = re.compile(r"story_fbid[=%]3D(\d+)|story_fbid=(\d+)")
+_POST_ID = re.compile(r"/posts/(\d+)|/videos/(\d+)|/photos/\S+/(\d+)|/reel/(\d+)")
+_COUNT_PATTERN = re.compile(r"([\d,.]+)\s*([KkMm]?)")
 
 
-# ── Helper: parse human-friendly counts (e.g. "1.2K", "3M") ─────────────────
 def _parse_count(raw: str) -> int:
-    """Convert '1.2K', '3M', '456' → int."""
     raw = raw.replace(",", "").strip()
-    match = _COUNT_PATTERN.search(raw)
-    if not match:
+    m = _COUNT_PATTERN.search(raw)
+    if not m:
         return 0
-    token = match.group(1).upper()
     try:
-        if token.endswith("K"):
-            return int(float(token[:-1]) * 1_000)
-        if token.endswith("M"):
-            return int(float(token[:-1]) * 1_000_000)
-        return int(float(token))
-    except ValueError:
+        # If raw text contains things like "187 autres personnes" (French), split and parse first token
+        first_token = raw.split()[0]
+        m = _COUNT_PATTERN.search(first_token)
+        if not m:
+             return 0
+        num = float(m.group(1))
+        suffix = m.group(2).upper()
+        if suffix == "K":
+            return int(num * 1_000)
+        if suffix == "M":
+            return int(num * 1_000_000)
+        return int(num)
+    except Exception:
         return 0
 
 
 def _extract_post_id(url: str) -> str:
-    """Extract a stable post ID from a Facebook URL."""
-    # Try story_fbid first (most reliable)
-    m = _STORY_ID_PATTERN.search(url)
-    if m:
-        return m.group(1)
-    m = _POST_ID_FROM_URL.search(url)
+    m = _STORY_ID.search(url)
     if m:
         return m.group(1) or m.group(2) or ""
-    # Last resort: use last path segment
+    m = _POST_ID.search(url)
+    if m:
+        return next((g for g in m.groups() if g), "")
+    # pfbid style: extract from query string
+    qs = parse_qs(urlparse(url).query)
+    if "id" in qs:
+        return qs["id"][0]
+    # last segment
     parts = url.rstrip("/").split("/")
-    return parts[-1] if parts else url
+    return parts[-1] if parts else ""
 
 
 def _normalise_fb_url(href: str) -> str:
-    """Make relative Facebook URLs absolute and strip tracking params."""
+    if not href:
+        return ""
     if not href.startswith("http"):
         href = urljoin(FB_BASE, href)
-    # Strip ?__cft__... and similar tracking noise
     return href.split("?")[0]
 
 
-# ── Core parser ───────────────────────────────────────────────────────────────
-
 async def extract_posts(page: Page, page_name: str, max_posts: int) -> list[dict[str, Any]]:
     """
-    Scroll through the Facebook page feed and return a list of parsed post dicts.
-
-    Args:
-        page:       Playwright Page already navigated to the FB page URL.
-        page_name:  The target page's username / slug.
-        max_posts:  Stop collecting after this many posts (0 = unlimited).
-
-    Returns:
-        List of post dicts ready for DB insertion.
+    Scroll and extract posts from the desktop Facebook page feed.
     """
     posts: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
 
-    logger.info("Starting post extraction for page '%s' (max=%d)", page_name, max_posts)
+    logger.info("Extracting posts from desktop feed for '%s' (max=%d)", page_name, max_posts)
 
-    # Iterate article elements in the feed
-    # Facebook renders posts as <div role="article"> or <article> tags
-    feed_selectors = [
-        'div[role="feed"] > div',
-        'div[data-pagelet="FeedUnit_0"]',
-        'div[role="article"]',
-    ]
-
-    for attempt in range(30):  # max 30 scroll rounds
-        for feed_sel in feed_selectors:
-            try:
-                articles = await page.query_selector_all(feed_sel)
-                if articles:
-                    break
-            except Exception:
-                articles = []
-
+    # Scroll loop
+    for scroll_round in range(1, 30):
+        # On desktop, each post card is a div inside the timeline feed.
+        # Common selector: role="article" or structured data-pagelet elements
         articles = await page.query_selector_all('div[role="article"]')
+        logger.info("Scroll round %d: Found %d post elements on page.", scroll_round, len(articles))
 
+        new_posts_found = 0
         for article in articles:
             if max_posts and len(posts) >= max_posts:
-                logger.info("Reached max_posts limit (%d). Stopping.", max_posts)
+                logger.info("Reached max_posts limit. Stopping.")
                 return posts
 
             try:
-                post_data = await _parse_article(article, page_name)
+                post_data = await _parse_desktop_article(article, page_name)
             except Exception as exc:
-                logger.warning("Failed to parse an article element: %s", exc)
+                logger.debug("Failed parsing element: %s", exc)
                 continue
 
             if not post_data or not post_data.get("post_id"):
                 continue
 
             if post_data["post_id"] in seen_ids:
-                continue  # duplicate in current scroll window
+                # Still verify if engagement stats need to be updated (upsert logic handles this, but don't add to output twice in this run)
+                continue
 
             seen_ids.add(post_data["post_id"])
             posts.append(post_data)
+            new_posts_found += 1
+            
             logger.info(
-                "[%d] Collected post %s – %s",
+                "[%d] Loaded post: ID=%s  Type=%-6s  Likes=%-4d  Comments=%-4d  Shares=%-4d",
                 len(posts),
                 post_data["post_id"],
                 post_data["media_type"],
+                post_data["likes_count"],
+                post_data["comments_count"],
+                post_data["shares_count"]
             )
 
         if max_posts and len(posts) >= max_posts:
             break
 
-        # Scroll down and wait for new content to load
-        await page.evaluate("window.scrollBy(0, window.innerHeight * 1.5)")
-        await asyncio.sleep(3)
+        # Scroll down to load more content
+        await page.evaluate("window.scrollBy(0, 1500)")
+        await asyncio.sleep(4)
 
-        # Detect end-of-feed
-        end_markers = await page.query_selector_all(
-            'span:has-text("End of results"), div:has-text("No more posts")'
-        )
-        if end_markers:
-            logger.info("End-of-feed detected. Stopping scroll.")
+        # Detect feed end or login overlays
+        no_more = await page.query_selector_all('span:has-text("Plus de publications"), span:has-text("End of results")')
+        if no_more:
+            logger.info("No more posts available (end of feed).")
             break
 
-    logger.info("Extraction complete. %d posts collected.", len(posts))
+    logger.info("Extraction complete: %d posts collected.", len(posts))
     return posts
 
 
-async def _parse_article(article, page_name: str) -> dict[str, Any] | None:
-    """Parse a single <div role='article'> element into a post dict."""
-
-    # ── Post URL & ID ─────────────────────────────────────────────────────────
+async def _parse_desktop_article(article, page_name: str) -> dict[str, Any] | None:
+    """Parse a single desktop role='article' block."""
+    
+    # ── 1. Post ID and URL ──────────────────────────────────────────────────
     post_url = ""
     post_id = ""
 
-    # Look for a timestamp link (most reliable source of the post permalink)
-    time_links = await article.query_selector_all("a[href*='/posts/'], a[href*='/videos/'], "
-                                                   "a[href*='/photos/'], a[href*='/reel/'], "
-                                                   "a[href*='story_fbid']")
-    for link in time_links:
+    # Look for links that link to the post detail view (timestamps, permalinks, reels, photo links)
+    links = await article.query_selector_all('a[href*="/posts/"], a[href*="/videos/"], a[href*="/photos/"], a[href*="/reel/"], a[href*="permalink.php"], a[href*="story_fbid"]')
+    for link in links:
         href = await link.get_attribute("href") or ""
-        if href and ("posts" in href or "videos" in href or "photos" in href
-                     or "reel" in href or "story_fbid" in href):
+        if href:
             post_url = _normalise_fb_url(href)
             post_id = _extract_post_id(href)
-            break
-
-    if not post_id:
-        # Fallback: try data-ft attribute
-        data_ft = await article.get_attribute("data-ft") or ""
-        m = re.search(r'"top_level_post_id":(\d+)', data_ft)
-        if m:
-            post_id = m.group(1)
+            if post_id:
+                break
 
     if not post_id:
         return None
 
-    # ── Post text ─────────────────────────────────────────────────────────────
+    # ── 2. Text Content ──────────────────────────────────────────────────────
     post_text = ""
-    text_selectors = [
-        'div[data-ad-comet-preview="message"]',
-        'div[data-ad-preview="message"]',
-        'div[class*="userContent"]',
-        'span[dir="auto"]',
-    ]
-    for sel in text_selectors:
-        el = await article.query_selector(sel)
-        if el:
-            post_text = (await el.inner_text()).strip()
-            if post_text:
-                break
+    # Text container usually has a dir="auto" attribute and is wrapped in post-message class styling
+    text_els = await article.query_selector_all('div[dir="auto"]')
+    for el in text_els:
+        # Exclude comment containers, headers, author name, or action button texts
+        text_content = (await el.inner_text()).strip()
+        if len(text_content) > len(post_text) and not text_content.startswith("Commenter") and not text_content.startswith("Partager"):
+            post_text = text_content
 
-    # ── Published at ─────────────────────────────────────────────────────────
-    published_at: datetime | None = None
-    time_el = await article.query_selector("time[datetime]")
+    # ── 3. Published Timestamp ────────────────────────────────────────────────
+    published_at = datetime.now(tz=timezone.utc)
+    # Desktop uses <a role="link"> containing a timestamp or a time element inside
+    time_el = await article.query_selector("time")
     if time_el:
-        dt_str = await time_el.get_attribute("datetime") or ""
-        try:
-            published_at = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
-        except ValueError:
-            pass
+        dt_str = await time_el.get_attribute("datetime")
+        if dt_str:
+            try:
+                published_at = datetime.fromtimestamp(int(dt_str), tz=timezone.utc)
+            except ValueError:
+                try:
+                    published_at = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
+                except ValueError:
+                    pass
 
-    if not published_at:
-        published_at = datetime.now(tz=timezone.utc)
-
-    # ── Media type & URLs ─────────────────────────────────────────────────────
+    # ── 4. Media Parsing ─────────────────────────────────────────────────────
     media_type = "text"
     media_urls: list[str] = []
 
-    # Video / Reel
-    video_els = await article.query_selector_all("video[src], video source[src]")
-    if video_els:
-        media_type = "video"
+    # Check for videos/reels
+    video_els = await article.query_selector_all("video")
+    if video_els or "/videos/" in post_url or "/reel/" in post_url:
+        media_type = "reel" if "/reel/" in post_url else "video"
         for v in video_els:
             src = await v.get_attribute("src") or ""
             if src and src not in media_urls:
                 media_urls.append(src)
-
-    # Check for reel indicator in URL
-    if "reel" in post_url:
-        media_type = "reel"
-
-    # Images (only if no video found)
+                
+    # Check for images if no video
     if media_type == "text":
-        img_els = await article.query_selector_all("img[src]")
-        candidate_imgs = []
+        img_els = await article.query_selector_all("img")
+        imgs = []
         for img in img_els:
             src = await img.get_attribute("src") or ""
-            # Skip profile/avatar images (small square images < 100px or fbcdn avatar paths)
             alt = await img.get_attribute("alt") or ""
-            width_attr = await img.get_attribute("width") or "0"
-            if (
-                src
-                and "fbcdn.net" in src
-                and "profile" not in src.lower()
-                and src not in candidate_imgs
-                and int(width_attr or 0) >= 200
-            ):
-                candidate_imgs.append(src)
-        if candidate_imgs:
+            # Filter out avatars, emojis, icons, and small decoration assets
+            if src and "fbcdn" in src and "emoji" not in src and "rsrc.php" not in src:
+                # Avatars usually have profile alt texts or are small square thumbnails
+                if "profile" not in src.lower() and "profile" not in alt.lower():
+                    imgs.append(src)
+        if imgs:
             media_type = "image"
-            media_urls = candidate_imgs
+            media_urls = imgs
 
-    # Shared links
-    if media_type == "text":
-        link_el = await article.query_selector('a[href*="l.facebook.com"]')
-        if link_el:
-            media_type = "link"
-
-    # ── Engagement counts ─────────────────────────────────────────────────────
+    # ── 5. Engagement Metrics (Likes, Comments, Shares) ─────────────────────
     likes_count = 0
-    shares_count = 0
     comments_count = 0
+    shares_count = 0
 
-    # Reaction count  – Facebook uses aria-label like "234 people reacted"
-    reaction_el = await article.query_selector('[aria-label*="reaction"], [aria-label*="people reacted"]')
-    if not reaction_el:
-        reaction_el = await article.query_selector('span[data-testid="UFI2ReactionsCount/root"]')
-    if reaction_el:
-        raw = await reaction_el.inner_text()
-        likes_count = _parse_count(raw)
+    # Likes selector (usually has a label containing reaction stats or is a sibling of the reaction icons)
+    # Check text elements matching reaction summaries
+    likes_el = await article.query_selector('span[class*="xt0psk2"], span[class*="x1n2onr6"] > span')
+    if likes_el:
+        likes_count = _parse_count(await likes_el.inner_text())
+    else:
+        # Fallback to scanning text patterns
+        article_text = await article.inner_text()
+        m = re.search(r"(\d[\d,.]*)\s*(?:likes|J'aime|reaction|personnes|autres)", article_text, re.IGNORECASE)
+        if m:
+            likes_count = _parse_count(m.group(1))
 
-    # Comment count
-    comment_el = await article.query_selector(
-        'span:has-text("comment"), span:has-text("Comment")'
-    )
-    if comment_el:
-        raw = await comment_el.inner_text()
-        comments_count = _parse_count(raw)
+    # Comments and Shares
+    # Find spans or links that mention "commentaires" (French) or "comments" (English)
+    cmt_els = await article.query_selector_all('span:has-text("commentaire"), span:has-text("comment")')
+    for cmt in cmt_els:
+        txt = await cmt.inner_text()
+        count = _parse_count(txt)
+        if count > 0:
+            comments_count = count
+            break
 
-    # Share count
-    share_el = await article.query_selector(
-        'span:has-text("share"), span:has-text("Share")'
-    )
-    if share_el:
-        raw = await share_el.inner_text()
-        shares_count = _parse_count(raw)
+    share_els = await article.query_selector_all('span:has-text("partage"), span:has-text("share")')
+    for sh in share_els:
+        txt = await sh.inner_text()
+        count = _parse_count(txt)
+        if count > 0:
+            shares_count = count
+            break
 
     return {
         "post_id": post_id,
@@ -298,7 +264,7 @@ async def _parse_article(article, page_name: str) -> dict[str, Any] | None:
         "published_at": published_at.isoformat(),
         "media_type": media_type,
         "media_urls": media_urls,
-        "stored_media": [],  # filled in by media_handler
+        "stored_media": [],
         "likes_count": likes_count,
         "shares_count": shares_count,
         "comments_count": comments_count,

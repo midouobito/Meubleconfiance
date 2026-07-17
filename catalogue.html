@@ -38,12 +38,16 @@
 
 <div id="site-footer"></div>
 
+<!-- Supabase CDN and Client initialization -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 <script src="products.js"></script>
 <script src="main.js"></script>
 <script>
   const params = new URLSearchParams(window.location.search);
   let activeCat = params.get("cat") || "الكل";
   let query = "";
+  let currentProducts = []; // Holds data loaded from database or static fallback
 
   const catScroll = document.getElementById("catScroll");
   const grid = document.getElementById("catalogueGrid");
@@ -77,7 +81,7 @@
           <div class="p-name">${p.name}</div>
           <div class="p-price-row">
             <div>
-              <span class="p-price">${formatPrice(p.price)}</span>
+              <span class="p-price">${p.price > 0 ? formatPrice(p.price) : "اتصل لمعرفة السعر"}</span>
               ${p.oldPrice ? `<span class="p-price-old">${formatPrice(p.oldPrice)}</span>` : ""}
             </div>
             <div class="p-view">←</div>
@@ -88,15 +92,15 @@
   }
 
   function renderGrid() {
-    let list = PRODUCTS.filter(p => activeCat === "الكل" || p.category === activeCat);
+    let list = currentProducts.filter(p => activeCat === "الكل" || p.category === activeCat);
     if (query.trim()) {
-      list = list.filter(p => p.name.includes(query) || p.category.includes(query));
+      list = list.filter(p => p.name.includes(query) || p.category.includes(query) || p.description.includes(query));
     }
     resultCount.textContent = `${list.length} منتج`;
     grid.innerHTML = list.map(renderProductCard).join("");
     emptyState.style.display = list.length === 0 ? "block" : "none";
 
-    // re-init tilt + rotate gallery for newly rendered cards
+    // re-init tilt + rotate gallery
     document.querySelectorAll(".thumb-wrap").forEach(el => {
       const images = JSON.parse(el.dataset.images || "[]");
       const dots = el.querySelector(".dot-row");
@@ -106,13 +110,37 @@
     addRotateIndicators();
   }
 
+  // Load from Supabase facebook_posts
+  async function loadData() {
+    try {
+      const { data: posts, error } = await supabase
+        .from("facebook_posts")
+        .select("*")
+        .order("published_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (posts && posts.length > 0) {
+        currentProducts = posts.map(mapPostToProduct);
+      } else {
+        currentProducts = PRODUCTS; // fallback if DB empty
+      }
+    } catch (err) {
+      console.warn("Using offline PRODUCTS fallback due to connection error:", err);
+      currentProducts = PRODUCTS;
+    }
+    
+    renderChips();
+    renderGrid();
+  }
+
   document.getElementById("searchInput").addEventListener("input", (e) => {
     query = e.target.value;
     renderGrid();
   });
 
-  renderChips();
-  renderGrid();
+  // Initialise
+  loadData();
 </script>
 </body>
 </html>

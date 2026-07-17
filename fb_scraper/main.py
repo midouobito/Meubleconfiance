@@ -35,7 +35,7 @@ import config  # noqa: F401  – side-effect: sets up logging
 from db.supabase_client import fetch_existing_post_ids, get_client, upsert_posts
 from scraper.browser import dismiss_cookie_banner, launch_browser
 from scraper.media_handler import archive_media_urls
-from scraper.page_parser import extract_posts
+from scraper.page_parser import MBASIC_BASE, extract_posts
 
 logger = logging.getLogger(__name__)
 
@@ -135,8 +135,8 @@ def _print_summary(posts: list[dict[str, Any]], success: int, failure: int) -> N
 
         console.print(table)
         console.print(
-            f"[bold green]✓ {success} upserted[/bold green]  "
-            f"[bold red]✗ {failure} failed[/bold red]  "
+            f"[bold green]OK: {success} upserted[/bold green]  "
+            f"[bold red]FAIL: {failure} failed[/bold red]  "
             f"out of {len(posts)} scraped posts."
         )
     except ImportError:
@@ -169,8 +169,8 @@ async def run_pipeline(
 
     # ── 2. Browser session ────────────────────────────────────────────────────
     async with launch_browser() as (browser, ctx, page):
-        # Navigate
-        logger.info("Navigating to %s …", page_url)
+        # Navigate with saved session (run save_session.py first if not done)
+        logger.info("Navigating to %s ...", page_url)
         try:
             await page.goto(page_url, wait_until="domcontentloaded", timeout=60_000)
         except Exception as exc:
@@ -180,13 +180,11 @@ async def run_pipeline(
         # Dismiss cookie / login overlay
         await dismiss_cookie_banner(page)
 
-        # Wait for the feed to start rendering
+        # Wait for desktop content to load
         try:
-            await page.wait_for_selector('div[role="feed"], div[role="article"]', timeout=20_000)
+            await page.wait_for_selector('div[role="article"]', timeout=20_000)
         except Exception:
-            logger.warning(
-                "Feed selector not found – page may require login or is structured differently."
-            )
+            logger.warning("Feed selector not found – page may be private or unavailable.")
 
         # ── 3. Extract posts ──────────────────────────────────────────────────
         raw_posts = await extract_posts(page, page_name, max_posts)

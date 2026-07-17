@@ -1,4 +1,6 @@
 .env
+browser_session/
+debug_output/
 logs/
 __pycache__/
 *.pyc

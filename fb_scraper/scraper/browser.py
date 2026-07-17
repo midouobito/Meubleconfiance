@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import random
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 from playwright.async_api import (
@@ -23,40 +24,32 @@ import config
 
 logger = logging.getLogger(__name__)
 
-# ── List of realistic viewports to rotate ────────────────────────────────────
+SESSION_FILE = Path(__file__).resolve().parent.parent / "browser_session" / "storage_state.json"
+
 _VIEWPORTS = [
     {"width": 1366, "height": 768},
     {"width": 1440, "height": 900},
     {"width": 1920, "height": 1080},
     {"width": 1280, "height": 800},
 ]
-
-# ── Realistic browser locale / timezone combos ────────────────────────────────
-_LOCALES = ["en-US", "en-GB", "fr-FR", "de-DE"]
+_LOCALES   = ["en-US", "en-GB", "fr-FR", "de-DE"]
 _TIMEZONES = ["America/New_York", "Europe/London", "Europe/Paris", "Europe/Berlin"]
 
 
 @asynccontextmanager
 async def launch_browser() -> AsyncGenerator[tuple[Browser, BrowserContext, Page], None]:
-    """
-    Async context-manager that yields (browser, context, page).
-
-    Usage:
-        async with launch_browser() as (browser, ctx, page):
-            await page.goto(url)
-    """
+    """Async context-manager that yields (browser, context, page)."""
     playwright: Playwright
     async with async_playwright() as playwright:
-        viewport = random.choice(_VIEWPORTS)
-        locale = random.choice(_LOCALES)
-        timezone = random.choice(_TIMEZONES)
+        viewport  = random.choice(_VIEWPORTS)
+        locale    = random.choice(_LOCALES)
+        timezone  = random.choice(_TIMEZONES)
 
+        has_session = SESSION_FILE.exists()
         logger.info(
-            "Launching Chromium – viewport=%dx%d  locale=%s  tz=%s",
-            viewport["width"],
-            viewport["height"],
-            locale,
-            timezone,
+            "Launching Chromium – viewport=%dx%d  locale=%s  tz=%s  session=%s",
+            viewport["width"], viewport["height"], locale, timezone,
+            "loaded" if has_session else "NONE (run save_session.py first)",
         )
 
         browser: Browser = await playwright.chromium.launch(
@@ -70,37 +63,30 @@ async def launch_browser() -> AsyncGenerator[tuple[Browser, BrowserContext, Page
             ],
         )
 
-        context: BrowserContext = await browser.new_context(
+        ctx_kwargs = dict(
             user_agent=config.USER_AGENT,
             viewport=viewport,
             locale=locale,
             timezone_id=timezone,
             java_script_enabled=True,
-            # Pretend we accept cookies so the cookie banner is less aggressive
-            extra_http_headers={
-                "Accept-Language": "en-US,en;q=0.9",
-            },
+            extra_http_headers={"Accept-Language": "en-US,en;q=0.9"},
         )
+        if has_session:
+            ctx_kwargs["storage_state"] = str(SESSION_FILE)
 
-        # ── Erase navigator.webdriver fingerprint ─────────────────────────────
+        context: BrowserContext = await browser.new_context(**ctx_kwargs)
+
         await context.add_init_script(
             """
-            Object.defineProperty(navigator, 'webdriver', {
-                get: () => undefined,
-            });
-            Object.defineProperty(navigator, 'plugins', {
-                get: () => [1, 2, 3, 4, 5],
-            });
-            Object.defineProperty(navigator, 'languages', {
-                get: () => ['en-US', 'en'],
-            });
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            Object.defineProperty(navigator, 'plugins',   { get: () => [1, 2, 3, 4, 5] });
+            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
             window.chrome = { runtime: {} };
             """
         )
 
         page: Page = await context.new_page()
 
-        # Block images and fonts on non-media requests to speed up page load
         async def _route_handler(route, request):
             if request.resource_type in ("font",):
                 await route.abort()
