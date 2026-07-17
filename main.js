@@ -45,13 +45,16 @@ function injectHeaderFooter() {
             <a href="tel:0671946690">📞 0671 94 66 90</a>
           </div>
           <div class="tb-links">
-            <span>توصيل و تركيب عبر كامل الوطن</span>
+            <span>باتنة، طريق عين التوتة — توصيل و تركيب عبر كامل الوطن</span>
           </div>
         </div>
       </div>
       <header class="site-header">
         <div class="container nav-row">
-          <a href="index.html" class="logo">أثاث <span>الثقة</span><small>Meuble Confiance — باتنة</small></a>
+          <a href="index.html" class="logo">
+            <img src="img/logo.png" alt="أثاث الثقة باتنة 05">
+            <small>Meuble Confiance — باتنة 05</small>
+          </a>
           <nav class="main-nav">
             <a href="index.html" class="${current === "home" ? "active" : ""}">الرئيسية</a>
             <a href="catalogue.html" class="${current === "catalogue" ? "active" : ""}">الكتالوج</a>
@@ -85,8 +88,8 @@ function injectHeaderFooter() {
         <div class="container">
           <div class="foot-grid">
             <div>
-              <div class="foot-logo">أثاث الثقة — باتنة</div>
-              <p>شركة جزائرية مختصة في صناعة وبيع كل أنواع الأثاث المنزلي، بخبرة تمتد عبر آلاف العملاء الراضين في كامل الوطن.</p>
+              <div class="foot-logo"><img src="img/logo.png" alt="أثاث الثقة باتنة 05"></div>
+              <p>شركة جزائرية مختصة في صناعة وبيع كل أنواع الأثاث المنزلي: صالونات، غرف نوم، طاولات وديكور، بخبرة تمتد عبر آلاف العملاء الراضين في كامل الوطن.</p>
               <div class="social-row">
                 <a href="https://www.facebook.com/Meuble.Confiance.Batna.05/" target="_blank" rel="noopener" aria-label="فيسبوك">f</a>
                 <a href="https://www.instagram.com/meuble.confiance.batna/" target="_blank" rel="noopener" aria-label="انستغرام">◎</a>
@@ -100,20 +103,21 @@ function injectHeaderFooter() {
             </div>
             <div>
               <h4>خدمة العملاء</h4>
-              <a href="tel:0552420934">0552 42 09 34</a>
-              <a href="tel:0671946690">0671 94 66 90</a>
+              <a href="tel:0552420934">0552 42 09 34 — صالونات وغرف نوم</a>
+              <a href="tel:0671946690">0671 94 66 90 — طاولات</a>
+              <a href="tel:0557580951">0557 58 09 51 — ديكور</a>
               <a href="#">الدفع عند الاستلام</a>
-              <a href="#">التوصيل والتركيب</a>
             </div>
             <div>
               <h4>معلومات</h4>
-              <p>باتنة، الجزائر</p>
+              <p>طريق عين التوتة، مقابل عمارات برالة، قاعة حفلات بن يحي سابقاً — باتنة</p>
               <p>مفتوح كل الأيام</p>
+              <a href="https://www.ethikameuble.com" target="_blank" rel="noopener">www.ethikameuble.com</a>
             </div>
           </div>
           <div class="foot-bottom">
             <span>© 2026 أثاث الثقة باتنة 05 — جميع الحقوق محفوظة</span>
-            <span>موقع تجريبي — الصور والمنتجات للعرض فقط</span>
+            <span>موقع تجريبي — بعض الصور للعرض فقط</span>
           </div>
         </div>
       </footer>
