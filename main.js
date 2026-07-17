@@ -4,7 +4,32 @@ document.addEventListener("DOMContentLoaded", () => {
   injectHeaderFooter();
   initTiltCards();
   initMobileNav();
+  initHeaderScroll();
 });
+
+function initHeaderScroll() {
+  const header = document.querySelector("header.site-header");
+  if (!header) return;
+  window.addEventListener("scroll", () => {
+    header.classList.toggle("scrolled", window.scrollY > 8);
+  }, { passive: true });
+}
+
+// يضيف أيقونة صغيرة تشير إلى أن الصورة قابلة للتدوير التفاعلي (عند وجود أكثر من صورة واحدة)
+function addRotateIndicators() {
+  document.querySelectorAll(".thumb-wrap, .pd-main").forEach((el) => {
+    if (el.querySelector(".rotate-indicator")) return;
+    const raw = el.dataset.images;
+    const count = raw ? JSON.parse(raw).length : el.querySelectorAll("img").length;
+    if (count > 1) {
+      const icon = document.createElement("div");
+      icon.className = "rotate-indicator";
+      icon.innerHTML = "↔";
+      icon.title = "حرّك الماوس لتدوير المنتج";
+      el.appendChild(icon);
+    }
+  });
+}
 
 function injectHeaderFooter() {
   const headerEl = document.getElementById("site-header");
@@ -114,22 +139,10 @@ function initMobileNav() {
   });
 }
 
-// تأثير الإمالة ثلاثية الأبعاد عند تحريك الماوس فوق البطاقة
+// تكبير خفيف ومسطح عند المرور فوق البطاقة (بدون إمالة ثلاثية الأبعاد، تصميم مسطح)
 function initTiltCards() {
   document.querySelectorAll(".tilt-card, .product-card .thumb-wrap").forEach((card) => {
-    card.addEventListener("mousemove", (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-      const rotY = ((x - cx) / cx) * 8;
-      const rotX = -((y - cy) / cy) * 8;
-      card.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.02)`;
-    });
-    card.addEventListener("mouseleave", () => {
-      card.style.transform = `perspective(900px) rotateX(0) rotateY(0) scale(1)`;
-    });
+    card.style.transition = "transform .3s ease";
   });
 }
 

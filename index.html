@@ -6,7 +6,7 @@
 <title>أثاث الثقة باتنة 05 | أثاث منزلي فاخر — توصيل و تركيب لكامل الوطن</title>
 <meta name="description" content="أثاث الثقة باتنة 05 — صالونات، غرف نوم، مطابخ، طاولات وديكور. جودة عالية، دفع عند الاستلام، توصيل وتركيب لكل الولايات.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body data-page="home">
 
@@ -125,7 +125,7 @@
 
 <div id="site-footer"></div>
 
-<script src="js/products.js"></script>
+<script src="products.js"></script>
 <script>
   const catImages = {
     "صالونات": "https://picsum.photos/seed/cat-salon/700/560",
@@ -174,13 +174,14 @@
     `;
   }
 </script>
-<script src="js/main.js"></script>
+<script src="main.js"></script>
 <script>
   document.querySelectorAll(".thumb-wrap").forEach(el => {
     const images = JSON.parse(el.dataset.images || "[]");
     const dots = el.querySelector(".dot-row");
     if (images.length > 1) initRotateGallery(el, images, dots);
   });
+  addRotateIndicators();
 </script>
 </body>
 </html>
