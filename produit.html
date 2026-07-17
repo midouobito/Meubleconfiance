@@ -201,22 +201,6 @@
 
   // Run initialisation
   initProductPage();
-</script>"p-price">${formatPrice(p.price)}</span>
-          <div class="p-view">←</div>
-        </div>
-      </div>
-    </a>
-  `).join("");
-
-  initTiltCards();
-  if (product.images.length > 1) {
-    const icon = document.createElement("div");
-    icon.className = "rotate-indicator";
-    icon.innerHTML = "↔";
-    icon.title = "حرّك الماوس لتدوير المنتج";
-    pdMain.appendChild(icon);
-  }
-  addRotateIndicators();
 </script>
 </body>
 </html>
