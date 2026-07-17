@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>منتج | أثاث الثقة Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body style="background-color: #f4f6f8;">
+
+  <div class="admin-topbar">
+    <div class="topbar-content">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <a href="admin.html" class="btn-icon">←</a>
+        <h2 id="pageTitle" style="margin:0; font-size:20px;">إضافة منتج</h2>
+      </div>
+      <div>
+        <button id="btnSaveProductTop" class="btn btn-primary">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-container">
+    <form id="productForm" class="product-layout">
+      <input type="hidden" id="prodId">
+      
+      <!-- Colonne principale -->
+      <div class="main-column">
+        
+        <!-- Bloc Informations -->
+        <div class="admin-card">
+          <div class="form-group" style="margin-bottom:15px;">
+            <label>العنوان</label>
+            <input type="text" id="prodName" placeholder="أدخل اسم المنتج" required>
+          </div>
+          <div class="form-group">
+            <label>الوصف</label>
+            <textarea id="prodDesc" rows="6" placeholder="اكتب وصفاً مفصلاً للمنتج..."></textarea>
+          </div>
+        </div>
+
+        <!-- Bloc Médias -->
+        <div class="admin-card">
+          <h3>الوسائط (الصور)</h3>
+          <div class="media-uploader" id="mediaUploader">
+            <input type="file" id="prodImageFile" accept="image/*" multiple>
+            <div class="upload-hint" id="uploadHint">
+              <span style="font-size:24px;">📁</span>
+              <p>اضغط أو اسحب الصور هنا للرفع</p>
+            </div>
+            <div id="imagePreviewGrid" class="image-preview-grid"></div>
+          </div>
+          <div class="form-group" style="margin-top:15px;">
+            <label style="font-size:12px; color:#666;">أو أدخل روابط صور مباشرة (مفصولة بفاصلة):</label>
+            <textarea id="prodImageUrls" placeholder="https://image1.jpg, https://image2.jpg" dir="ltr" rows="2"></textarea>
+          </div>
+        </div>
+
+        <!-- Bloc Prix -->
+        <div class="admin-card">
+          <h3>التسعير</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>السعر (دج)</label>
+              <input type="number" id="prodPrice" placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+              <label>السعر القديم (للمقارنة - دج)</label>
+              <input type="number" id="prodOldPrice" placeholder="0.00">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Colonne latérale -->
+      <div class="side-column">
+        
+        <!-- Bloc Statut -->
+        <div class="admin-card">
+          <h3>حالة المنتج</h3>
+          <select id="prodActive" class="status-select">
+            <option value="true">نشط (مرئي)</option>
+            <option value="false">مسودة (مخفي)</option>
+          </select>
+        </div>
+
+        <!-- Bloc Organisation -->
+        <div class="admin-card">
+          <h3>التنظيم</h3>
+          <div class="form-group" style="margin-bottom:15px;">
+            <label>التصنيف</label>
+            <select id="prodCategory">
+              <option value="صالونات">صالونات</option>
+              <option value="غرف نوم">غرف نوم</option>
+              <option value="طاولات وكراسي">طاولات وكراسي</option>
+              <option value="مطابخ">مطابخ</option>
+              <option value="مكاتب">مكاتب</option>
+              <option value="ديكور وإكسسوارات">ديكور وإكسسوارات</option>
+              <option value="Autre">أخرى</option>
+            </select>
+          </div>
+          
+          <div class="form-group" style="margin-bottom:15px;">
+            <label>الخامة</label>
+            <input type="text" id="prodMaterial" placeholder="مثال: خشب أحمر">
+          </div>
+          
+          <div class="form-group">
+            <label>الأبعاد</label>
+            <input type="text" id="prodDimensions" placeholder="مثال: 200x160 سم" dir="ltr">
+          </div>
+        </div>
+
+      </div>
+    </form>
+    
+    <div style="text-align:left; margin-top:20px; padding-bottom:40px;">
+      <button type="submit" form="productForm" class="btn btn-primary" id="btnSaveProductBottom">حفظ المنتج</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="admin-product.js"></script>
+</body>
+</html>
