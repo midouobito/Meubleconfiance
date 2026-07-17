@@ -36,25 +36,38 @@ _COUNT_PATTERN = re.compile(r"([\d,.]+)\s*([KkMm]?)")
 
 
 def _parse_count(raw: str) -> int:
-    raw = raw.replace(",", "").strip()
-    m = _COUNT_PATTERN.search(raw)
-    if not m:
+    raw = raw.strip()
+    if not raw:
         return 0
-    try:
-        # If raw text contains things like "187 autres personnes" (French), split and parse first token
-        first_token = raw.split()[0]
-        m = _COUNT_PATTERN.search(first_token)
-        if not m:
-             return 0
-        num = float(m.group(1))
-        suffix = m.group(2).upper()
-        if suffix == "K":
-            return int(num * 1_000)
-        if suffix == "M":
-            return int(num * 1_000_000)
-        return int(num)
-    except Exception:
+        
+    # Find all numeric patterns (e.g. 187, 1.2K, 12,300)
+    numbers = re.findall(r"(\d[\d,.]*\s*[KkMm]?)", raw)
+    if not numbers:
         return 0
+        
+    total = 0
+    for num_str in numbers:
+        num_str = num_str.replace(",", "").replace(" ", "").upper()
+        try:
+            if num_str.endswith("K"):
+                total += int(float(num_str[:-1]) * 1000)
+            elif num_str.endswith("M"):
+                total += int(float(num_str[:-1]) * 1000000)
+            else:
+                total += int(float(num_str))
+        except ValueError:
+            continue
+            
+    # If the string lists names (e.g. "Saa Lim et 187 autres personnes"), we add the named individuals
+    if " et " in raw or " and " in raw:
+        parts = re.split(r"\bet\b|\band\b", raw, maxsplit=1)
+        if len(parts) > 1:
+            names_part = parts[0]
+            # Split names by commas or standard separators to count them
+            names = [n.strip() for n in re.split(r",", names_part) if n.strip()]
+            total += len(names)
+            
+    return total
 
 
 def _extract_post_id(url: str) -> str:
@@ -202,24 +215,31 @@ async def _parse_desktop_article(article, page_name: str) -> dict[str, Any] | No
         media_type = "reel" if "/reel/" in post_url else "video"
         for v in video_els:
             src = await v.get_attribute("src") or ""
-            if src and src not in media_urls:
+            if src and not src.startswith("blob:") and src not in media_urls:
                 media_urls.append(src)
                 
-    # Check for images if no video
-    if media_type == "text":
-        img_els = await article.query_selector_all("img")
-        imgs = []
-        for img in img_els:
-            src = await img.get_attribute("src") or ""
-            alt = await img.get_attribute("alt") or ""
-            # Filter out avatars, emojis, icons, and small decoration assets
-            if src and "fbcdn" in src and "emoji" not in src and "rsrc.php" not in src:
-                # Avatars usually have profile alt texts or are small square thumbnails
-                if "profile" not in src.lower() and "profile" not in alt.lower():
-                    imgs.append(src)
-        if imgs:
+    # Always extract available images (e.g. photos, video poster frames, reel covers)
+    img_els = await article.query_selector_all("img")
+    candidate_imgs = []
+    for img in img_els:
+        src = await img.get_attribute("src") or ""
+        alt = await img.get_attribute("alt") or ""
+        # Filter out avatars, emojis, icons, and small decoration assets
+        if src and "fbcdn" in src and "emoji" not in src and "rsrc.php" not in src:
+            # Skip small profile avatars or small UI buttons
+            if "profile" not in src.lower() and "profile" not in alt.lower():
+                # Avoid duplicates
+                if src not in candidate_imgs:
+                    candidate_imgs.append(src)
+                    
+    if candidate_imgs:
+        # If it's a text post, change type to image
+        if media_type == "text":
             media_type = "image"
-            media_urls = imgs
+        # Combine extracted images into media_urls
+        for img_url in candidate_imgs:
+            if img_url not in media_urls:
+                media_urls.append(img_url)
 
     # ── 5. Engagement Metrics (Likes, Comments, Shares) ─────────────────────
     likes_count = 0
