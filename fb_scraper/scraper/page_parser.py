@@ -206,40 +206,48 @@ async def _parse_desktop_article(article, page_name: str) -> dict[str, Any] | No
                     pass
 
     # ── 4. Media Parsing ─────────────────────────────────────────────────────
-    media_type = "text"
+    media_type = "image"
+    if "/reel/" in post_url or "/videos/" in post_url:
+        media_type = "reel" if "/reel/" in post_url else "video"
+
     media_urls: list[str] = []
 
-    # Check for videos/reels
-    video_els = await article.query_selector_all("video")
-    if video_els or "/videos/" in post_url or "/reel/" in post_url:
-        media_type = "reel" if "/reel/" in post_url else "video"
-        for v in video_els:
-            src = await v.get_attribute("src") or ""
-            if src and not src.startswith("blob:") and src not in media_urls:
-                media_urls.append(src)
-                
-    # Always extract available images (e.g. photos, video poster frames, reel covers)
+    # Extract all images from the article block
     img_els = await article.query_selector_all("img")
     candidate_imgs = []
+    
     for img in img_els:
         src = await img.get_attribute("src") or ""
         alt = await img.get_attribute("alt") or ""
-        # Filter out avatars, emojis, icons, and small decoration assets
+        width = await img.get_attribute("width") or "0"
+        
+        # Filter out icons, emojis, and styling assets
         if src and "fbcdn" in src and "emoji" not in src and "rsrc.php" not in src:
-            # Skip small profile avatars or small UI buttons
+            # Skip profile avatars
             if "profile" not in src.lower() and "profile" not in alt.lower():
-                # Avoid duplicates
-                if src not in candidate_imgs:
-                    candidate_imgs.append(src)
-                    
-    if candidate_imgs:
-        # If it's a text post, change type to image
-        if media_type == "text":
-            media_type = "image"
-        # Combine extracted images into media_urls
-        for img_url in candidate_imgs:
-            if img_url not in media_urls:
-                media_urls.append(img_url)
+                # For video/reel posts, prioritize the high-resolution video thumbnail (contains /t15.)
+                if media_type in ("reel", "video"):
+                    if "/t15." in src or "poster" in src.lower() or "video" in src.lower() or int(width or 0) >= 300:
+                        if src not in candidate_imgs:
+                            candidate_imgs.append(src)
+                else:
+                    # For normal photo posts, take all standard photos
+                    if src not in candidate_imgs:
+                        candidate_imgs.append(src)
+                        
+    # Fallback: if we didn't find a specific t15 video poster, take the largest image in the container
+    if not candidate_imgs and img_els:
+        for img in img_els:
+            src = await img.get_attribute("src") or ""
+            if src and "fbcdn" in src and "emoji" not in src and "rsrc.php" not in src and "profile" not in src.lower():
+                candidate_imgs.append(src)
+                break
+
+    if not candidate_imgs:
+        logger.debug("Skipping post without valid media: %s", post_id)
+        return None
+        
+    media_urls = candidate_imgs
 
     # ── 5. Engagement Metrics (Likes, Comments, Shares) ─────────────────────
     likes_count = 0
