@@ -1,11 +1,60 @@
 // ---------- تفاعلات مشتركة عبر كل الصفحات ----------
 
 document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
   injectHeaderFooter();
   initTiltCards();
   initMobileNav();
   initHeaderScroll();
+  initToastContainer();
 });
+
+/* ============================================================
+   الوضع الليلي / النهاري (Dark / Light mode)
+   يُحفظ التفضيل في localStorage، ويُطبَّق فوراً قبل رسم الصفحة
+   لتفادي "الوميض" (flash) بين الوضعين.
+   ============================================================ */
+function initTheme() {
+  const saved = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved || (prefersDark ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+  const btn = document.getElementById("themeToggleBtn");
+  if (btn) btn.textContent = next === "dark" ? "☀️" : "🌙";
+}
+
+/* ============================================================
+   إشعارات Toast — بديل عصري لـ alert()
+   showToast("تم إرسال طلبك بنجاح", "success")
+   ============================================================ */
+function initToastContainer() {
+  if (document.getElementById("toastContainer")) return;
+  const el = document.createElement("div");
+  el.id = "toastContainer";
+  document.body.appendChild(el);
+}
+
+function showToast(message, type = "default", duration = 4000) {
+  initToastContainer();
+  const container = document.getElementById("toastContainer");
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  const icon = type === "success" ? "✅" : type === "error" ? "⚠️" : "💬";
+  toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("leaving");
+    setTimeout(() => toast.remove(), 260);
+  }, duration);
+}
 
 function initHeaderScroll() {
   const header = document.querySelector("header.site-header");
@@ -35,6 +84,8 @@ function injectHeaderFooter() {
   const headerEl = document.getElementById("site-header");
   const footerEl = document.getElementById("site-footer");
   const current = document.body.dataset.page || "";
+  const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const themeIcon = theme === "dark" ? "☀️" : "🌙";
 
   if (headerEl) {
     headerEl.innerHTML = `
@@ -63,6 +114,7 @@ function injectHeaderFooter() {
             <a href="index.html#contact">اتصل بنا</a>
           </nav>
           <div class="nav-actions">
+            <button class="theme-toggle" id="themeToggleBtn" aria-label="تبديل الوضع الليلي" onclick="toggleTheme()">${themeIcon}</button>
             <a href="tel:0671946690" class="btn-call">
               📞 <span class="long">اطلب الآن</span>
             </a>
@@ -71,13 +123,19 @@ function injectHeaderFooter() {
             </button>
           </div>
         </div>
-        <div id="mobileNav" style="display:none; border-top:1px solid var(--line); padding:16px 24px;">
-          <a href="index.html" style="display:block; padding:10px 0;">الرئيسية</a>
-          <a href="catalogue.html" style="display:block; padding:10px 0;">الكتالوج الكامل</a>
-          <a href="catalogue.html?cat=صالونات" style="display:block; padding:10px 0;">صالونات</a>
-          <a href="catalogue.html?cat=غرف نوم" style="display:block; padding:10px 0;">غرف نوم</a>
-          <a href="catalogue.html?cat=مطابخ" style="display:block; padding:10px 0;">مطابخ</a>
+        <div id="mobileNav">
+          <div class="drawer-head">
+            <strong>القائمة</strong>
+            <button class="drawer-close" id="drawerCloseBtn" aria-label="إغلاق القائمة">✕</button>
+          </div>
+          <a href="index.html" style="display:block; padding:12px 0;">الرئيسية</a>
+          <a href="catalogue.html" style="display:block; padding:12px 0;">الكتالوج الكامل</a>
+          <a href="catalogue.html?cat=صالونات" style="display:block; padding:12px 0;">صالونات</a>
+          <a href="catalogue.html?cat=غرف نوم" style="display:block; padding:12px 0;">غرف نوم</a>
+          <a href="catalogue.html?cat=مطابخ" style="display:block; padding:12px 0;">مطابخ</a>
+          <a href="index.html#contact" style="display:block; padding:12px 0;">اتصل بنا</a>
         </div>
+        <div class="nav-backdrop" id="navBackdrop"></div>
       </header>
     `;
   }
@@ -137,10 +195,26 @@ function injectHeaderFooter() {
 function initMobileNav() {
   const btn = document.getElementById("burgerBtn");
   const nav = document.getElementById("mobileNav");
+  const backdrop = document.getElementById("navBackdrop");
+  const closeBtn = document.getElementById("drawerCloseBtn");
   if (!btn || !nav) return;
-  btn.addEventListener("click", () => {
-    nav.style.display = nav.style.display === "none" ? "block" : "none";
-  });
+
+  const open = () => {
+    nav.classList.add("open");
+    if (backdrop) backdrop.classList.add("open");
+    document.body.style.overflow = "hidden";
+  };
+  const close = () => {
+    nav.classList.remove("open");
+    if (backdrop) backdrop.classList.remove("open");
+    document.body.style.overflow = "";
+  };
+
+  btn.addEventListener("click", open);
+  if (closeBtn) closeBtn.addEventListener("click", close);
+  if (backdrop) backdrop.addEventListener("click", close);
+  nav.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 }
 
 // تكبير خفيف ومسطح عند المرور فوق البطاقة (بدون إمالة ثلاثية الأبعاد، تصميم مسطح)
@@ -169,4 +243,22 @@ function initRotateGallery(el, images, dotsEl) {
   });
   el.addEventListener("mouseleave", () => setActive(0));
   return { setActive };
+}
+
+/* ============================================================
+   Skeleton loaders — بطاقات هيكلية مؤقتة أثناء تحميل البيانات
+   ============================================================ */
+function renderSkeletonCards(count = 8) {
+  let html = "";
+  for (let i = 0; i < count; i++) {
+    html += `
+      <div class="skel-card">
+        <div class="skel skel-thumb"></div>
+        <div class="skel skel-line" style="width:85%"></div>
+        <div class="skel skel-line w60"></div>
+        <div class="skel skel-line w40"></div>
+      </div>
+    `;
+  }
+  return html;
 }

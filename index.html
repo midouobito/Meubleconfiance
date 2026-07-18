@@ -7,6 +7,12 @@
 <meta name="description" content="أثاث الثقة باتنة 05 — صالونات، غرف نوم، مطابخ، طاولات وديكور. جودة عالية، دفع عند الاستلام، توصيل وتركيب لكل الولايات.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="style.css">
+<script>
+  (function(){
+    var t = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
 </head>
 <body data-page="home">
 
@@ -128,6 +134,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
 <script src="products.js"></script>
+<script src="main.js"></script>
 <script>
   const catImages = {
     "صالونات": "https://picsum.photos/seed/cat-salon/700/560",
@@ -137,12 +144,16 @@
   const homeCatGrid = document.getElementById("homeCatGrid");
   const featuredGrid = document.getElementById("featuredGrid");
 
+  // بطاقات هيكلية فور تحميل الصفحة
+  homeCatGrid.innerHTML = Object.keys(catImages).map(() => `<div class="skel-cat-card"><div class="skel skel-thumb"></div></div>`).join("");
+  featuredGrid.innerHTML = renderSkeletonCards(4);
+
   function renderProductCard(p) {
     return `
       <a href="produit.html?id=${p.id}" class="product-card">
         <div class="thumb-wrap" data-images='${JSON.stringify(p.images)}'>
           ${p.badge ? `<span class="badge">${p.badge}</span>` : ""}
-          ${p.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}" alt="${p.name}">`).join("")}
+          ${p.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}" alt="${p.name}" loading="lazy">`).join("")}
           <div class="thumb-shine"></div>
           <div class="dot-row">${p.images.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join("")}</div>
         </div>
@@ -182,11 +193,12 @@
     }
 
     // Render Categories
+    homeCatGrid.innerHTML = "";
     Object.entries(catImages).forEach(([cat, img]) => {
       const count = currentProducts.filter(p => p.category === cat).length;
       homeCatGrid.innerHTML += `
         <a href="catalogue.html?cat=${encodeURIComponent(cat)}" class="cat-card">
-          <img src="${img}" alt="${cat}">
+          <img src="${img}" alt="${cat}" loading="lazy">
           <div class="overlay">
             <h3>${cat}</h3>
             <span>${count}+ منتج</span>
@@ -214,6 +226,5 @@
 
   loadData();
 </script>
-<script src="main.js"></script>
 </body>
 </html>

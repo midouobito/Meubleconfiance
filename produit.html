@@ -7,6 +7,12 @@
 <meta name="description" id="pageDesc" content="تفاصيل المنتج — أثاث الثقة باتنة 05">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="style.css">
+<script>
+  (function(){
+    var t = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
 </head>
 <body data-page="produit">
 
@@ -23,7 +29,18 @@
 </div>
 
 <section class="container" id="productRoot">
-  <!-- يُبنى ديناميكياً عبر JS -->
+  <!-- عرض هيكلي مؤقت أثناء التحميل -->
+  <div class="pd-grid">
+    <div class="skel skel-pd-main"></div>
+    <div>
+      <div class="skel skel-line" style="width:30%; height:14px;"></div>
+      <div class="skel skel-line" style="width:70%; height:28px; margin-top:14px;"></div>
+      <div class="skel skel-line" style="width:40%; height:24px; margin-top:20px;"></div>
+      <div class="skel skel-line" style="width:95%; margin-top:24px;"></div>
+      <div class="skel skel-line" style="width:85%;"></div>
+      <div class="skel skel-line" style="width:60%;"></div>
+    </div>
+  </div>
 </section>
 
 <section class="related">
@@ -40,9 +57,15 @@
 
 <div id="site-footer"></div>
 
+<!-- شريط ثابت للطلب على الجوال -->
+<div class="sticky-order-bar" id="stickyOrderBar" style="display:none;">
+  <span class="sob-price" id="sobPrice"></span>
+  <button class="btn btn-primary" id="sobOrderBtn">اطلب الآن</button>
+</div>
+
 <!-- Modal COD -->
 <div id="codModal" class="modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); overflow:auto;">
-  <div class="modal-content" style="background-color:#fff; margin:10% auto; padding:20px; border-radius:10px; width:90%; max-width:500px; position:relative;">
+  <div class="modal-content" style="background-color:var(--paper); margin:10% auto; padding:20px; border-radius:10px; width:90%; max-width:500px; position:relative;">
     <span class="close-modal" style="position:absolute; top:10px; left:15px; font-size:28px; font-weight:bold; cursor:pointer; color:#999;">&times;</span>
     <h2 style="margin-top:0; font-family:'Cairo', sans-serif;">إتمام الطلب (الدفع عند الاستلام)</h2>
     <p style="margin-bottom:20px; font-size:14px; color:#666;">الرجاء إدخال معلوماتك وسنقوم بالاتصال بك لتأكيد الطلب.</p>
@@ -53,7 +76,7 @@
       </div>
       <div class="form-group" style="margin-bottom:15px;">
         <label style="display:block; margin-bottom:5px; font-weight:bold;">رقم الهاتف</label>
-        <input type="tel" id="codPhone" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-family:inherit;" dir="ltr" placeholder="06XXXXXXXX">
+        <input type="tel" id="codPhone" required pattern="0[5-7][0-9]{8}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-family:inherit;" dir="ltr" placeholder="06XXXXXXXX">
       </div>
       <div class="form-group" style="margin-bottom:15px;">
         <label style="display:block; margin-bottom:5px; font-weight:bold;">الولاية</label>
@@ -65,7 +88,7 @@
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">تأكيد الطلب</button>
     </form>
-    <div id="codSuccess" style="display:none; color:green; text-align:center; padding:20px 0; font-weight:bold;">
+    <div id="codSuccess" style="display:none; color:var(--success); text-align:center; padding:20px 0; font-weight:bold;">
       تم تسجيل طلبك بنجاح! سنتصل بك قريباً لتأكيد التوصيل.
     </div>
   </div>
@@ -79,7 +102,7 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const rawId = urlParams.get("id");
-  
+
   // Detect if the ID is a valid UUID (which matches Supabase table)
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
 
@@ -125,11 +148,11 @@
       <div class="pd-grid">
         <div class="pd-gallery">
           <div class="pd-main" id="pdMain">
-            ${product.images.map((img,i) => `<img src="${img}" class="${i===0?'active':''}" alt="${product.name} — صورة ${i+1}">`).join("")}
+            ${product.images.map((img,i) => `<img src="${img}" class="${i===0?'active':''}" alt="${product.name} — صورة ${i+1}" ${i===0?'':'loading="lazy"'}>`).join("")}
             <div class="pd-rotate-hint" id="rotateHint">↔ حرّك الماوس لمشاهدة الزوايا</div>
           </div>
           <div class="pd-thumbs" id="pdThumbs">
-            ${product.images.map((img,i) => `<button class="${i===0?'active':''}" data-i="${i}"><img src="${img}" alt="زاوية ${i+1}"></button>`).join("")}
+            ${product.images.map((img,i) => `<button class="${i===0?'active':''}" data-i="${i}"><img src="${img}" alt="زاوية ${i+1}" loading="lazy"></button>`).join("")}
           </div>
         </div>
         <div class="pd-info">
@@ -166,6 +189,11 @@
         </div>
       </div>
     `;
+
+    // شريط الطلب الثابت على الجوال
+    const sob = document.getElementById("stickyOrderBar");
+    document.getElementById("sobPrice").textContent = product.price > 0 ? formatPrice(product.price) : "اتصل لمعرفة السعر";
+    sob.style.display = "flex";
 
     // Interactivity: Rotate Gallery
     const pdMain = document.getElementById("pdMain");
@@ -210,19 +238,21 @@
 
     // Modal Logic
     const btnCod = document.getElementById("btnCod");
+    const sobOrderBtn = document.getElementById("sobOrderBtn");
     const codModal = document.getElementById("codModal");
     const closeModal = document.querySelector(".close-modal");
     const codForm = document.getElementById("codForm");
     const codSuccess = document.getElementById("codSuccess");
 
-    if (btnCod) {
-      btnCod.addEventListener("click", () => {
-        codModal.style.display = "block";
-        codForm.style.display = "block";
-        codSuccess.style.display = "none";
-        codForm.reset();
-      });
+    function openCodModal() {
+      codModal.style.display = "block";
+      codForm.style.display = "block";
+      codSuccess.style.display = "none";
+      codForm.reset();
     }
+
+    if (btnCod) btnCod.addEventListener("click", openCodModal);
+    if (sobOrderBtn) sobOrderBtn.addEventListener("click", openCodModal);
 
     closeModal.addEventListener("click", () => {
       codModal.style.display = "none";
@@ -257,9 +287,10 @@
 
         codForm.style.display = "none";
         codSuccess.style.display = "block";
+        showToast("تم تسجيل طلبك بنجاح! سنتصل بك قريباً.", "success");
       } catch (err) {
         console.error("Order error:", err);
-        alert("حدث خطأ أثناء تسجيل الطلب، يرجى المحاولة عبر الهاتف أو واتساب.");
+        showToast("حدث خطأ أثناء تسجيل الطلب، يرجى المحاولة عبر الهاتف أو واتساب.", "error");
       } finally {
         btnSubmit.disabled = false;
         btnSubmit.textContent = "تأكيد الطلب";
@@ -274,7 +305,7 @@
       <a href="produit.html?id=${p.id}" class="product-card">
         <div class="thumb-wrap">
           ${p.badge ? `<span class="badge">${p.badge}</span>` : ""}
-          <img src="${p.images[0]}" class="active" alt="${p.name}">
+          <img src="${p.images[0]}" class="active" alt="${p.name}" loading="lazy">
         </div>
         <div class="p-info">
           <div class="p-cat">${p.category}</div>
@@ -286,7 +317,7 @@
         </div>
       </a>
     `).join("");
-    
+
     initTiltCards();
     addRotateIndicators();
   }

@@ -7,6 +7,13 @@
 <meta name="description" content="تصفح كل تشكيلة أثاث الثقة باتنة: صالونات، غرف نوم، مطابخ، طاولات، مكاتب وديكور.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="style.css">
+<script>
+  // تطبيق الوضع الليلي فوراً لتفادي الوميض قبل تحميل main.js
+  (function(){
+    var t = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
 </head>
 <body data-page="catalogue">
 
@@ -26,13 +33,22 @@
     <div class="filters-bar">
       <div class="search-box">
         <span>🔍</span>
-        <input type="text" id="searchInput" placeholder="ابحث عن منتج...">
+        <input type="text" id="searchInput" placeholder="ابحث عن منتج..." aria-label="بحث">
       </div>
-      <div class="result-count" id="resultCount"></div>
+      <div class="filters-right">
+        <select id="sortSelect" class="sort-select" aria-label="ترتيب حسب">
+          <option value="new">الأحدث</option>
+          <option value="price-asc">السعر: من الأقل للأعلى</option>
+          <option value="price-desc">السعر: من الأعلى للأقل</option>
+          <option value="name">الاسم (أ-ي)</option>
+        </select>
+        <div class="result-count" id="resultCount"></div>
+      </div>
     </div>
 
     <div class="product-grid" id="catalogueGrid"></div>
     <div class="empty-state" id="emptyState" style="display:none;">لا توجد منتجات مطابقة لبحثك، جرّب كلمة أخرى.</div>
+    <button class="btn btn-outline btn-load-more" id="loadMoreBtn" style="display:none;">عرض المزيد ↓</button>
   </div>
 </section>
 
@@ -47,12 +63,21 @@
   const params = new URLSearchParams(window.location.search);
   let activeCat = params.get("cat") || "الكل";
   let query = "";
+  let sortBy = "new";
+  let visibleCount = 12;
+  const PAGE_SIZE = 12;
   let currentProducts = []; // Holds data loaded from database or static fallback
+  let isLoading = true;
 
   const catScroll = document.getElementById("catScroll");
   const grid = document.getElementById("catalogueGrid");
   const resultCount = document.getElementById("resultCount");
   const emptyState = document.getElementById("emptyState");
+  const loadMoreBtn = document.getElementById("loadMoreBtn");
+  const sortSelect = document.getElementById("sortSelect");
+
+  // عرض بطاقات هيكلية فور تحميل الصفحة، قبل وصول البيانات
+  grid.innerHTML = renderSkeletonCards(8);
 
   function renderChips() {
     catScroll.innerHTML = CATEGORIES.map(c => `
@@ -61,6 +86,7 @@
     catScroll.querySelectorAll(".cat-chip").forEach(btn => {
       btn.addEventListener("click", () => {
         activeCat = btn.dataset.cat;
+        visibleCount = PAGE_SIZE;
         renderChips();
         renderGrid();
       });
@@ -72,7 +98,7 @@
       <a href="produit.html?id=${p.id}" class="product-card">
         <div class="thumb-wrap" data-images='${JSON.stringify(p.images)}'>
           ${p.badge ? `<span class="badge">${p.badge}</span>` : ""}
-          ${p.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}" alt="${p.name}">`).join("")}
+          ${p.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}" alt="${p.name}" loading="lazy">`).join("")}
           <div class="thumb-shine"></div>
           <div class="dot-row">${p.images.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join("")}</div>
         </div>
@@ -91,14 +117,30 @@
     `;
   }
 
-  function renderGrid() {
+  function getFilteredSortedList() {
     let list = currentProducts.filter(p => activeCat === "الكل" || p.category === activeCat);
     if (query.trim()) {
       list = list.filter(p => p.name.includes(query) || p.category.includes(query) || p.description.includes(query));
     }
-    resultCount.textContent = `${list.length} منتج`;
+    switch (sortBy) {
+      case "price-asc": list = [...list].sort((a, b) => a.price - b.price); break;
+      case "price-desc": list = [...list].sort((a, b) => b.price - a.price); break;
+      case "name": list = [...list].sort((a, b) => a.name.localeCompare(b.name, "ar")); break;
+      default: break; // "new" = original order (already newest-first from query)
+    }
+    return list;
+  }
+
+  function renderGrid() {
+    if (isLoading) return; // skeleton already showing
+
+    const fullList = getFilteredSortedList();
+    const list = fullList.slice(0, visibleCount);
+
+    resultCount.textContent = `${fullList.length} منتج`;
     grid.innerHTML = list.map(renderProductCard).join("");
-    emptyState.style.display = list.length === 0 ? "block" : "none";
+    emptyState.style.display = fullList.length === 0 ? "block" : "none";
+    loadMoreBtn.style.display = fullList.length > visibleCount ? "flex" : "none";
 
     // re-init tilt + rotate gallery
     document.querySelectorAll(".thumb-wrap").forEach(el => {
@@ -110,7 +152,7 @@
     addRotateIndicators();
   }
 
-  // Load from Supabase facebook_posts
+  // Load from Supabase products table
   async function loadData() {
     try {
       const { data: posts, error } = await supabaseClient
@@ -129,14 +171,27 @@
     } catch (err) {
       console.warn("Using offline PRODUCTS fallback due to connection error:", err);
       currentProducts = PRODUCTS;
+      showToast("تعذّر الاتصال بالخادم، يتم عرض بيانات تجريبية.", "error");
     }
-    
+
+    isLoading = false;
     renderChips();
     renderGrid();
   }
 
   document.getElementById("searchInput").addEventListener("input", (e) => {
     query = e.target.value;
+    visibleCount = PAGE_SIZE;
+    renderGrid();
+  });
+
+  sortSelect.addEventListener("change", (e) => {
+    sortBy = e.target.value;
+    renderGrid();
+  });
+
+  loadMoreBtn.addEventListener("click", () => {
+    visibleCount += PAGE_SIZE;
     renderGrid();
   });
 
